@@ -1,26 +1,68 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useReducer } from "react";
+import * as items from "./items";
 
 function App() {
+  const [state, dispatch] = React.useReducer(items.reducer, items.initialItems);
+  items.setGlobalDispatch(dispatch);
+  return <Row item={state.HOME} />;
+}
+
+const Row = ({ item }: { item: items.Item }) => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div onClick={() => items.actions.rename("HOME", Math.random() + "")}>
+      {item.title}
     </div>
   );
+};
+
+class TextInfoView extends React.Component<any> {
+  ref = React.createRef<HTMLDivElement>();
+
+  collapse = () => {
+    if (this.ref.current)
+      this.ref.current.animate(
+        [
+          {
+            height: this.ref.current.clientHeight + "px",
+            opacity: 1,
+          },
+          { height: "0px", opacity: 0 },
+        ],
+        {
+          duration: 400,
+        }
+      );
+  };
+  componentDidMount() {
+    if (this.ref.current)
+      this.ref.current.animate(
+        [
+          { height: "0px", opacity: 0 },
+          {
+            height: this.ref.current.clientHeight + "px",
+            opacity: 1,
+          },
+        ],
+        {
+          duration: 400,
+        }
+      );
+  }
+  render() {
+    const info = this.props.info;
+    return (
+      <div
+        ref={this.ref}
+        style={{
+          fontSize: info.fontSize,
+          backgroundColor: info.color,
+          overflow: "hidden",
+        }}
+      >
+        {info.text}
+      </div>
+    );
+  }
 }
 
 export default App;
