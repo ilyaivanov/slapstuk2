@@ -7,6 +7,7 @@ import {
   Styles,
   styles,
 } from "./style";
+import c from "./CollapsibleContainer";
 
 export { cls, ids, zIndexes } from "./keys";
 export type { ClassName } from "./keys";
@@ -26,6 +27,8 @@ export * as utils from "./utils";
 // export * as itemEvents from "./events";
 // import * as dom from "./dom";
 // import * as anim from "./animations";
+
+export const CollapsibleContainer = c;
 
 export const css = {
   id: (id: string, style: Styles) => selector("#" + id, style),

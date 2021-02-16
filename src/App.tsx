@@ -1,5 +1,5 @@
 import React, { useReducer } from "react";
-import { cls, css, utils, anim } from "./infra";
+import { cls, css, utils, anim, CollapsibleContainer } from "./infra";
 import initialItems from "./initialItems";
 import * as items from "./items";
 
@@ -22,10 +22,6 @@ function App() {
   );
 }
 
-css.class(cls.childrenContainer, {
-  overflow: "hidden",
-});
-
 css.class(cls.rowChevron, {
   transition: "transform 150ms ease-in",
 });
@@ -36,87 +32,24 @@ css.class(cls.rotated, {
 type Props = { level: number; item: Item; allItems: Items };
 
 class RowWithChildren extends React.Component<Props> {
-  childRef = React.createRef<HTMLDivElement>();
-  transitionDuration = 200;
-  componentDidUpdate(preProps: Props) {
-    if (
-      !preProps.item.isOpen &&
-      this.props.item.isOpen &&
-      this.childRef.current
-    ) {
-      const a = anim.animate(
-        this.childRef.current,
-        [
-          { height: 0, opacity: 0 },
-          {
-            height: this.childRef.current.clientHeight,
-            opacity: 1,
-          },
-        ],
-        {
-          duration: this.transitionDuration,
-          id: "expanding",
-        }
-      );
-      this.handleAnimationFinish(a);
-    }
-  }
-
   renderChildren = (ids: string[], level: number) => (
-    <div ref={this.childRef} className={cls.childrenContainer}>
-      {ids.map((id) => (
-        <RowWithChildren
-          level={level + 1}
-          key={id}
-          item={this.props.allItems[id]}
-          allItems={this.props.allItems}
-        />
-      ))}
-    </div>
+    <CollapsibleContainer isOpen={!!this.props.item.isOpen}>
+      {() => (
+        <>
+          {ids.map((id) => (
+            <RowWithChildren
+              key={id}
+              level={level + 1}
+              item={this.props.allItems[id]}
+              allItems={this.props.allItems}
+            />
+          ))}
+        </>
+      )}
+    </CollapsibleContainer>
   );
 
-  revertCurrentAnimations = () => {
-    if (this.childRef.current) {
-      const animation = anim.getAnimations(this.childRef.current)[0];
-      if (animation) {
-        animation.id = animation.id == "expanding" ? "collapsing" : "expanding";
-        animation.reverse();
-        return true;
-      }
-    }
-    return false;
-  };
-
-  onRowClick = () => {
-    if (this.revertCurrentAnimations()) return;
-    const { current } = this.childRef;
-    if (current && this.props.item.isOpen) {
-      const a = current.animate(
-        [
-          {
-            height: current.clientHeight + "px",
-            opacity: 1,
-          },
-          { height: "0px", opacity: 0 },
-        ],
-        {
-          duration: this.transitionDuration,
-          id: "collapsing",
-        }
-      );
-      this.handleAnimationFinish(a);
-    } else {
-      items.actions.openItemInSidebar(this.props.item);
-    }
-  };
-
-  handleAnimationFinish = (a: Animation) => {
-    a.addEventListener("finish", () => {
-      if (a.id == "collapsing")
-        items.actions.hideItemInSidebar(this.props.item);
-      else items.actions.openItemInSidebar(this.props.item);
-    });
-  };
+  onRowClick = () => items.actions.toggleItemInSidebar(this.props.item);
 
   renderRow = (item: Item, level: number) => (
     <Row item={item} level={level} onClick={this.onRowClick} />
@@ -127,7 +60,7 @@ class RowWithChildren extends React.Component<Props> {
     return (
       <>
         {this.renderRow(item, level)}
-        {item.isOpen && this.renderChildren(item.children, level)}
+        {this.renderChildren(item.children, level)}
       </>
     );
   }

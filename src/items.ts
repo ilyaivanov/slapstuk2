@@ -37,4 +37,13 @@ export const actions = {
         isOpen: true,
       },
     }),
+
+  toggleItemInSidebar: (item: Item) =>
+    globalDispatch({
+      type: "change-item",
+      itemId: item.id,
+      newItemProps: {
+        isOpen: !item.isOpen,
+      },
+    }),
 };
