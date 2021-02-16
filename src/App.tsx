@@ -8,6 +8,7 @@ function App() {
   items.setGlobalDispatch(dispatch);
   return (
     <>
+      <div style={{ height: 100, backgroundColor: "lightGrey" }}>header</div>
       <Row
         item={state.HOME}
         level={0}
@@ -31,25 +32,41 @@ css.class(cls.rotated, {
 
 type Props = { level: number; item: Item; allItems: Items };
 
-class RowWithChildren extends React.Component<Props> {
-  renderChildren = (ids: string[], level: number) => (
-    <CollapsibleContainer isOpen={!!this.props.item.isOpen}>
-      {() => (
-        <>
-          {ids.map((id) => (
-            <RowWithChildren
-              key={id}
-              level={level + 1}
-              item={this.props.allItems[id]}
-              allItems={this.props.allItems}
-            />
-          ))}
-        </>
-      )}
-    </CollapsibleContainer>
+class RowWithChildren extends React.PureComponent<Props> {
+  renderChildren = () => (
+    <>
+      {this.props.item.children.map((id) => (
+        <RowWithChildren
+          key={id}
+          level={this.props.level + 1}
+          item={this.props.allItems[id]}
+          allItems={this.props.allItems}
+        />
+      ))}
+    </>
   );
 
-  onRowClick = () => items.actions.toggleItemInSidebar(this.props.item);
+  renderLoading = () => (
+    <div style={{ paddingLeft: (this.props.level + 1) * 20 }}>Loading...</div>
+  );
+
+  onRowClick = () => {
+    if (this.props.item.children.length === 0 && !this.props.item.isLoading) {
+      items.actions.startLoading(this.props.item);
+      setTimeout(() => {
+        const result: Item[] = utils
+          .generateNumbers(Math.round(Math.random() * 15))
+          .map((num) => ({
+            id: Math.random() + "",
+            title: "Loaded item " + num,
+            children: [],
+          }));
+        items.actions.finishLoading(this.props.item, result);
+      }, 2000);
+    } else {
+      items.actions.toggleItemInSidebar(this.props.item);
+    }
+  };
 
   renderRow = (item: Item, level: number) => (
     <Row item={item} level={level} onClick={this.onRowClick} />
@@ -57,10 +74,13 @@ class RowWithChildren extends React.Component<Props> {
 
   render() {
     const { item, level } = this.props;
+    console.log(item);
     return (
       <>
         {this.renderRow(item, level)}
-        {this.renderChildren(item.children, level)}
+        <CollapsibleContainer isOpen={!!this.props.item.isOpen}>
+          {this.props.item.isLoading ? this.renderLoading : this.renderChildren}
+        </CollapsibleContainer>
       </>
     );
   }

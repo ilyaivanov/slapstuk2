@@ -13,20 +13,24 @@ type CollapsibleCotainerProps = {
 };
 
 export default class CollapsibleContainer extends React.Component<CollapsibleCotainerProps> {
-  transitionDuration = 500;
+  transitionDuration = 200;
   childRef = React.createRef<HTMLDivElement>();
+
   state = {
     isVisible: false,
   };
 
-  componentDidMount() {
-    this.setState({
-      isVisible: this.props.isOpen,
-    });
+  constructor(props: CollapsibleCotainerProps) {
+    super(props);
+    this.state = {
+      isVisible: props.isOpen,
+    };
   }
 
   componentDidUpdate(preProps: CollapsibleCotainerProps) {
     const current = this.childRef.current;
+
+    console.log("did update", preProps, this.props);
     if (!preProps.isOpen && this.props.isOpen && current) {
       if (this.revertCurrentAnimations()) return;
       this.setState(
@@ -69,6 +73,8 @@ export default class CollapsibleContainer extends React.Component<CollapsibleCot
       );
       this.handleAnimationFinish(a);
     }
+    //TODO: consider how to check if I need to expand contents here
+    //try to save current height before update using getSnapshotBeforeUpdate
   }
 
   handleAnimationFinish = (a: Animation) => {

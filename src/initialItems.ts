@@ -26,7 +26,7 @@ const initialItems: Items = {
     id: "1",
     title: "First",
     isOpen: true,
-    children: utils.generateNumbers(30).map((n) => "1." + n),
+    children: utils.generateNumbers(2).map((n) => "1." + n),
   },
   2: {
     id: "2",
@@ -34,7 +34,7 @@ const initialItems: Items = {
     children: [],
   },
   ...utils
-    .generateNumbers(30)
+    .generateNumbers(2)
     .map((n) => item("1." + n, "First"))
     .reduce((a, i) => ({ ...a, ...i }), {}),
   ...openItem("1.5", "First", ["1.5.1", "1.5.2"]),

@@ -5,5 +5,6 @@ type Item = {
   title: string;
   children: string[];
   isOpen?: boolean;
+  isLoading?: boolean;
 };
 type Items = { [id: string]: Item };
