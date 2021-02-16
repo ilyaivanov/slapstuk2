@@ -20,7 +20,7 @@ export type { ClassName } from "./keys";
 // } from "./dom";
 // export * as dom from "./dom";
 // export * as icons from "./icons";
-// export * as anim from "./animations";
+export * as anim from "./animations";
 export * as colors from "./colors";
 export * as utils from "./utils";
 // export * as itemEvents from "./events";

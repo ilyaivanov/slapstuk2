@@ -1,32 +1,16 @@
-export type Item = {
-  id: string;
-  title: string;
-  children: [];
-  isOpen?: boolean;
-};
-type Items = { [id: string]: Item };
-
-export const initialItems: Items = {
-  HOME: {
-    id: "HOME",
-    title: "Home",
-    children: [],
-  },
-};
-
 type ItemAction = {
-  type: "rename";
+  type: "change-item";
   itemId: string;
-  newName: string;
+  newItemProps: Partial<Item>;
 };
 
 export const reducer = (state: Items, action: ItemAction): Items => {
-  if (action.type == "rename") {
+  if (action.type == "change-item") {
     return {
       ...state,
       [action.itemId]: {
         ...state[action.itemId],
-        title: action.newName,
+        ...action.newItemProps,
       },
     };
   }
@@ -37,10 +21,20 @@ export const setGlobalDispatch = (dispatch: React.Dispatch<ItemAction>) =>
   (globalDispatch = dispatch);
 
 export const actions = {
-  rename: (itemId: string, newName: string) =>
+  hideItemInSidebar: (item: Item) =>
     globalDispatch({
-      type: "rename",
-      itemId,
-      newName,
+      type: "change-item",
+      itemId: item.id,
+      newItemProps: {
+        isOpen: false,
+      },
+    }),
+  openItemInSidebar: (item: Item) =>
+    globalDispatch({
+      type: "change-item",
+      itemId: item.id,
+      newItemProps: {
+        isOpen: true,
+      },
     }),
 };

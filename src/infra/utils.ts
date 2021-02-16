@@ -1,3 +1,5 @@
+import { ClassName } from "./keys";
+
 //[0 .. to] inclusive
 export const generateNumbers = (to: number) =>
   Array.from(new Array(to)).map((_, index) => index);
@@ -47,3 +49,10 @@ export function generateRandomColorHsl() {
   const lightness = Math.floor(Math.random() * (100 / 2 + 1)) + "%";
   return "hsl(" + hue + ", " + saturation + ", " + lightness + ")";
 }
+
+export const cn = (classDefinitions: {
+  [className: string]: boolean | undefined;
+}) =>
+  Object.keys(classDefinitions)
+    .filter((key) => !!classDefinitions[key])
+    .join(" ");
