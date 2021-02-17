@@ -5,6 +5,7 @@ export const cls = {
   row: id(), //c5 (class number matches line number)
   childrenContainer: id(), //c6 etc
   rotated: id(),
+  sidebar: id(),
   rowFocused: id(),
   rowChevron: id(),
   none: "",

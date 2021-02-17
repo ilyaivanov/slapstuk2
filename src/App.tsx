@@ -4,21 +4,27 @@ import initialItems from "./initialItems";
 import * as items from "./items";
 
 function App() {
-  const [state, dispatch] = React.useReducer(items.reducer, initialItems);
+  const initialState: items.RootState = {
+    items: initialItems,
+    uiOptions: {
+      focusedNode: "HOME",
+    },
+  };
+  const [state, dispatch] = React.useReducer(items.reducer, initialState);
   items.setGlobalDispatch(dispatch);
+  const allItems = state.items;
+  const focusedNode = allItems[state.uiOptions.focusedNode];
   return (
     <>
       <div style={{ height: 100, backgroundColor: "lightGrey" }}>header</div>
-      <Row
-        item={state.HOME}
-        level={0}
-        onClick={() => undefined}
-        isRoot
-        isFocused
-      />
-      {state.HOME.children.map((id) => (
-        <RowWithChildren key={id} level={1} item={state[id]} allItems={state} />
-      ))}
+      <div className={cls.sidebar}>
+        <RowWithChildren
+          item={focusedNode}
+          allItems={allItems}
+          level={0}
+          isRootItem
+        />
+      </div>
     </>
   );
 }
@@ -30,11 +36,16 @@ css.class(cls.rotated, {
   transform: "rotateZ(90deg)",
 });
 
-type Props = { level: number; item: Item; allItems: Items };
+type Props = {
+  level: number;
+  item: Item;
+  allItems: Items;
+  isRootItem?: boolean;
+};
 
 class RowWithChildren extends React.PureComponent<Props> {
   renderChildren = () => (
-    <>
+    <div data-testid={"children-" + this.props.item.id}>
       {this.props.item.children.map((id) => (
         <RowWithChildren
           key={id}
@@ -43,44 +54,41 @@ class RowWithChildren extends React.PureComponent<Props> {
           allItems={this.props.allItems}
         />
       ))}
-    </>
+    </div>
   );
 
   renderLoading = () => (
-    <div style={{ paddingLeft: (this.props.level + 1) * 20 }}>Loading...</div>
+    <div
+      data-testid={"loading-" + this.props.item.id}
+      style={{ paddingLeft: (this.props.level + 1) * 20 }}
+    >
+      Loading...
+    </div>
   );
 
   onRowClick = () => {
+    items.actions.toggleItemInSidebar(this.props.item);
     if (this.props.item.children.length === 0 && !this.props.item.isLoading) {
       items.actions.startLoading(this.props.item);
-      setTimeout(() => {
-        const result: Item[] = utils
-          .generateNumbers(Math.round(Math.random() * 15))
-          .map((num) => ({
-            id: Math.random() + "",
-            title: "Loaded item " + num,
-            children: [],
-          }));
-        items.actions.finishLoading(this.props.item, result);
-      }, 2000);
-    } else {
-      items.actions.toggleItemInSidebar(this.props.item);
     }
   };
 
   renderRow = (item: Item, level: number) => (
-    <Row item={item} level={level} onClick={this.onRowClick} />
+    <Row
+      item={item}
+      level={level}
+      isFocused={this.props.isRootItem}
+      onClick={this.onRowClick}
+    />
   );
 
   render() {
-    const { item, level } = this.props;
-    console.log(item);
+    const { item, level, isRootItem } = this.props;
     return (
       <>
         {this.renderRow(item, level)}
-        <CollapsibleContainer isOpen={!!this.props.item.isOpen}>
-          {this.props.item.isLoading ? this.renderLoading : this.renderChildren}
-        </CollapsibleContainer>
+        {(item.isOpen || isRootItem) &&
+          (item.isLoading ? this.renderLoading() : this.renderChildren())}
       </>
     );
   }
@@ -100,40 +108,56 @@ css.class(cls.rowFocused, {
 type RowProps = {
   item: Item;
   level: number;
-  isRoot?: boolean;
   isFocused?: boolean;
   onClick: () => void;
 };
-const Row = ({ item, isRoot, isFocused, level, onClick }: RowProps) => (
-  <div
-    className={utils.cn({
-      [cls.row]: true,
-      [cls.rowFocused]: isFocused,
-    })}
-    style={{ paddingLeft: level * 20 }}
-    onClick={onClick}
-  >
-    {!isRoot && (
-      <div
-        className={utils.cn({
-          [cls.rotated]: item.isOpen,
-          [cls.rowChevron]: true,
-        })}
-      >
-        {">"}
-      </div>
-    )}
-    {item.title}
-    {!isRoot && (
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          console.log("focus node");
-        }}
-      >
-        f
-      </button>
-    )}
-  </div>
-);
+const Row = ({ item, isFocused, level, onClick }: RowProps) => {
+  const isHome = item.id === "HOME";
+  return (
+    <div
+      data-testid={"row-" + item.id}
+      className={utils.cn({
+        [cls.row]: true,
+        [cls.rowFocused]: isFocused,
+      })}
+      style={{ paddingLeft: level * 20 }}
+      onClick={onClick}
+    >
+      {!isHome && isFocused && (
+        <button
+          data-testid={"unfocus-" + item.id}
+          onClick={(e) => {
+            e.stopPropagation();
+            items.actions.unfocus();
+          }}
+        >
+          {"<-"}
+        </button>
+      )}
+      {!isHome && (
+        <div
+          data-testid={"chevron-" + item.id}
+          className={utils.cn({
+            [cls.rotated]: item.isOpen,
+            [cls.rowChevron]: true,
+          })}
+        >
+          {">"}
+        </div>
+      )}
+      {item.title}
+      {!isHome && (
+        <button
+          data-testid={"focus-" + item.id}
+          onClick={(e) => {
+            e.stopPropagation();
+            items.actions.focusItem(item);
+          }}
+        >
+          f
+        </button>
+      )}
+    </div>
+  );
+};
 export default App;
