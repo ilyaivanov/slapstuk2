@@ -1,8 +1,11 @@
-import React, { useReducer } from "react";
-import { cls, css, utils, anim, CollapsibleContainer } from "./infra";
+import React from "react";
+import { cls, css, utils } from "./infra";
 import initialItems from "./initialItems";
 import * as items from "./items";
-
+css.tag("body", {
+  backgroundColor: "#1E1E1E",
+  color: "#D4D4D4",
+});
 function App() {
   const initialState: items.RootState = {
     items: initialItems,
@@ -134,7 +137,7 @@ const Row = ({ item, isFocused, level, onClick }: RowProps) => {
           {"<-"}
         </button>
       )}
-      {!isHome && (
+      {!isFocused && (
         <div
           data-testid={"chevron-" + item.id}
           className={utils.cn({

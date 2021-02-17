@@ -98,7 +98,11 @@ describe("Having some items on the app", () => {
       expect(getAllRows()).toHaveLength(2);
     });
 
-    describe("clicking back on 1 row", () => {
+    it("there should be no chevron for item 1", () => {
+      expect(queryChevronForItem("1")).not.toBeInTheDocument();
+    });
+
+    describe("clicking unfocus on 1 row", () => {
       beforeEach(() => fireEvent.click(getUnfocusButton("1")));
       it("HOME should be focused", () => {
         expect(getRowForItem("HOME")).toHaveClass(cls.rowFocused);
@@ -126,6 +130,7 @@ describe("Having some items on the app", () => {
 });
 
 const getChevronForItem = (itemId: string) => get("chevron-" + itemId);
+const queryChevronForItem = (itemId: string) => query("chevron-" + itemId);
 const getLoadingForItem = (itemId: string) => get("loading-" + itemId);
 const queryChildrenContainerForItem = (itemId: string) =>
   query("children-" + itemId);
