@@ -24,7 +24,7 @@ const initialItems: Items = {
   },
   1: {
     id: "1",
-    title: "First",
+    title: "Константин Кадавр",
     isOpen: true,
     children: utils.generateNumbers(2).map((n) => "1." + n),
   },

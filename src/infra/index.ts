@@ -9,7 +9,7 @@ import {
 } from "./style";
 import c from "./CollapsibleContainer";
 
-export { cls, ids, zIndexes } from "./keys";
+export { cls, ids, zIndexes, tIds } from "./keys";
 export type { ClassName } from "./keys";
 // export {
 //   div,
@@ -20,7 +20,7 @@ export type { ClassName } from "./keys";
 //   EventsDefinition,
 // } from "./dom";
 // export * as dom from "./dom";
-// export * as icons from "./icons";
+export * as icons from "./icons";
 export * as anim from "./animations";
 export * as colors from "./colors";
 export * as utils from "./utils";

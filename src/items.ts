@@ -1,6 +1,6 @@
 import { utils } from "./infra";
 
-type Action = ItemAction | ItemLoaded | FocusItem;
+type Action = ItemAction | ItemLoaded | ChangeUIOptions | ChangeUIState;
 
 type ItemAction = {
   type: "change-item";
@@ -13,16 +13,31 @@ type ItemLoaded = {
   itemId: string;
   items: Item[];
 };
-type FocusItem = {
-  type: "focus-item";
-  itemId: string;
+type ChangeUIOptions = {
+  type: "change-ui-options";
+  options: Partial<UIOptions>;
 };
+type ChangeUIState = {
+  type: "change-ui-state";
+  uiState: Partial<UIState>;
+};
+
 export type RootState = {
   items: Items;
+  //UI options are consious user UI choices (width of sidebar)
   uiOptions: UIOptions;
+  //UI state is technical state not directly relevant to functional requirements (is mouse down or not)
+  uiState: UIState;
 };
+
 type UIOptions = {
   focusedNode: string;
+  leftSidebarWidth: number;
+  isLeftSidebarVisible: boolean;
+};
+
+type UIState = {
+  isMouseDownOnAdjuster: boolean;
 };
 
 const itemsReducer = (items: Items, action: Action): Items => {
@@ -60,12 +75,21 @@ export const reducer = (state: RootState, action: Action): RootState => {
       items: itemsReducer(state.items, action),
     };
   }
-  if (action.type == "focus-item") {
+  if (action.type == "change-ui-options") {
     return {
       ...state,
       uiOptions: {
         ...state.uiOptions,
-        focusedNode: action.itemId,
+        ...action.options,
+      },
+    };
+  }
+  if (action.type == "change-ui-state") {
+    return {
+      ...state,
+      uiState: {
+        ...state.uiState,
+        ...action.uiState,
       },
     };
   }
@@ -96,6 +120,7 @@ export const actions = {
       },
     });
   },
+
   finishLoading: (item: Item, subitems: Item[]) =>
     globalDispatch({
       type: "item-loaded",
@@ -111,19 +136,37 @@ export const actions = {
         isOpen: !item.isOpen,
       },
     }),
+
   focusItem: (item: Item) => {
     if (item.children.length == 0) {
       actions.startLoading(item);
     }
     globalDispatch({
-      type: "focus-item",
-      itemId: item.id,
+      type: "change-ui-options",
+      options: { focusedNode: item.id },
     });
   },
 
   unfocus: () =>
     globalDispatch({
-      type: "focus-item",
-      itemId: "HOME",
+      type: "change-ui-options",
+      options: { focusedNode: "HOME" },
+    }),
+
+  setSidebarWidth: (sidebarWidth: number) =>
+    globalDispatch({
+      type: "change-ui-options",
+      options: { leftSidebarWidth: sidebarWidth },
+    }),
+
+  assignUiState: (uiState: UIState) =>
+    globalDispatch({
+      type: "change-ui-state",
+      uiState,
+    }),
+  assignUiOptions: (options: Partial<UIOptions>) =>
+    globalDispatch({
+      type: "change-ui-options",
+      options,
     }),
 };

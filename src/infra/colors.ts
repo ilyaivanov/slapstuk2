@@ -16,6 +16,7 @@ export const cardBeingPlayedBackground = primary;
 
 export const iconRegular = "rgb(184, 184, 184)";
 export const iconHover = "white";
+export const textRegular = "white";
 
 // export const folderColor = "#a335ee";
 // export const playlistColor = "#1eaa00";

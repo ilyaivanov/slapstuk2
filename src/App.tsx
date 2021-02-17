@@ -1,16 +1,20 @@
 import React from "react";
-import { cls, css, utils } from "./infra";
+import { cls, colors, css, icons, tIds, utils } from "./infra";
 import initialItems from "./initialItems";
 import * as items from "./items";
-css.tag("body", {
-  backgroundColor: "#1E1E1E",
-  color: "#D4D4D4",
-});
+import AppLayout from "./Layout";
+import Row, { getPaddingForLevel } from "./sidebar/Row";
+
 function App() {
   const initialState: items.RootState = {
     items: initialItems,
     uiOptions: {
       focusedNode: "HOME",
+      leftSidebarWidth: 300,
+      isLeftSidebarVisible: true,
+    },
+    uiState: {
+      isMouseDownOnAdjuster: false,
     },
   };
   const [state, dispatch] = React.useReducer(items.reducer, initialState);
@@ -18,25 +22,85 @@ function App() {
   const allItems = state.items;
   const focusedNode = allItems[state.uiOptions.focusedNode];
   return (
-    <>
-      <div style={{ height: 100, backgroundColor: "lightGrey" }}>header</div>
-      <div className={cls.sidebar}>
-        <RowWithChildren
-          item={focusedNode}
-          allItems={allItems}
-          level={0}
-          isRootItem
-        />
-      </div>
-    </>
+    <AppLayout
+      state={state}
+      gallery={<div>Gallery</div>}
+      topbar={
+        <div>
+          <button
+            data-testid={tIds.toggleSidebar}
+            onClick={() =>
+              items.actions.assignUiOptions({
+                isLeftSidebarVisible: !state.uiOptions.isLeftSidebarVisible,
+              })
+            }
+          >
+            left
+          </button>
+        </div>
+      }
+      sidebar={
+        <>
+          <RowWithChildren
+            item={focusedNode}
+            allItems={allItems}
+            level={-1}
+            isRootItem
+          />
+          <SidebarWidthAdjuster
+            isMouseDown={state.uiState.isMouseDownOnAdjuster}
+          />
+        </>
+      }
+    />
   );
 }
 
-css.class(cls.rowChevron, {
-  transition: "transform 150ms ease-in",
+type SidebarWidthAdjusterProps = {
+  isMouseDown: boolean;
+};
+class SidebarWidthAdjuster extends React.PureComponent<SidebarWidthAdjusterProps> {
+  componentDidMount() {
+    document.addEventListener("mousemove", this.onMouseMove);
+    document.addEventListener("mouseup", this.onMouseUp);
+  }
+
+  onMouseMove = (e: MouseEvent) => {
+    if (this.props.isMouseDown) items.actions.setSidebarWidth(e.clientX);
+  };
+
+  onMouseUp = () =>
+    items.actions.assignUiState({
+      isMouseDownOnAdjuster: false,
+    });
+
+  onMouseDown = () =>
+    items.actions.assignUiState({
+      isMouseDownOnAdjuster: true,
+    });
+
+  render() {
+    return (
+      <div
+        className={cls.sidebarWidthAdjuster}
+        onMouseDown={this.onMouseDown}
+      />
+    );
+  }
+}
+
+css.class(cls.sidebarWidthAdjuster, {
+  position: "absolute",
+  right: -1,
+  width: 3,
+  top: 0,
+  bottom: 0,
+  cursor: "col-resize",
+  transition: "background-color 200ms ease-out",
 });
-css.class(cls.rotated, {
-  transform: "rotateZ(90deg)",
+
+css.hover(cls.sidebarWidthAdjuster, {
+  backgroundColor: colors.primary,
 });
 
 type Props = {
@@ -63,7 +127,7 @@ class RowWithChildren extends React.PureComponent<Props> {
   renderLoading = () => (
     <div
       data-testid={"loading-" + this.props.item.id}
-      style={{ paddingLeft: (this.props.level + 1) * 20 }}
+      style={{ paddingLeft: getPaddingForLevel(this.props.level + 2) }}
     >
       Loading...
     </div>
@@ -97,70 +161,4 @@ class RowWithChildren extends React.PureComponent<Props> {
   }
 }
 
-css.class(cls.row, {
-  cursor: "pointer",
-  display: "flex",
-  alignItems: "center",
-});
-
-css.class(cls.rowFocused, {
-  fontWeight: "bold",
-  fontSize: 20,
-});
-
-type RowProps = {
-  item: Item;
-  level: number;
-  isFocused?: boolean;
-  onClick: () => void;
-};
-const Row = ({ item, isFocused, level, onClick }: RowProps) => {
-  const isHome = item.id === "HOME";
-  return (
-    <div
-      data-testid={"row-" + item.id}
-      className={utils.cn({
-        [cls.row]: true,
-        [cls.rowFocused]: isFocused,
-      })}
-      style={{ paddingLeft: level * 20 }}
-      onClick={onClick}
-    >
-      {!isHome && isFocused && (
-        <button
-          data-testid={"unfocus-" + item.id}
-          onClick={(e) => {
-            e.stopPropagation();
-            items.actions.unfocus();
-          }}
-        >
-          {"<-"}
-        </button>
-      )}
-      {!isFocused && (
-        <div
-          data-testid={"chevron-" + item.id}
-          className={utils.cn({
-            [cls.rotated]: item.isOpen,
-            [cls.rowChevron]: true,
-          })}
-        >
-          {">"}
-        </div>
-      )}
-      {item.title}
-      {!isHome && (
-        <button
-          data-testid={"focus-" + item.id}
-          onClick={(e) => {
-            e.stopPropagation();
-            items.actions.focusItem(item);
-          }}
-        >
-          f
-        </button>
-      )}
-    </div>
-  );
-};
 export default App;

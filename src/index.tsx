@@ -6,9 +6,7 @@ import reportWebVitals from "./reportWebVitals";
 
 css.tag("body", {
   margin: 0,
-  fontFamily: `-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-      "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-      sans-serif`,
+  fontFamily: `Roboto, "Source Sans Pro", "Trebuchet MS", "Lucida Grande", "Bitstream Vera Sans", "Helvetica Neue", sans-serif`,
 });
 
 ReactDOM.render(
