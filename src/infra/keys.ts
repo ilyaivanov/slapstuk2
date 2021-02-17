@@ -19,8 +19,14 @@ const classes = {
   rowCircle: "",
   childrenContainer: "",
   rowFocused: "",
+  rowMenuIcon: "",
+  rowMenuButton: "",
+  rowTitleInput: "",
   //Sidebar UI
   sidebarWidthAdjuster: "",
+  //Context Menu
+  contextMenu: "",
+  contextMenuRow: "",
   //Utility
   none: "",
 };
@@ -40,6 +46,10 @@ export const ids = {
 export const tIds = {
   toggleSidebar: "toggleSidebar",
   //Sidebar items
+
+  //Context Menu
+  contextMenuRename: "contextMenuEdit",
+  contextMenuDelete: "contextMenuDelete",
 };
 
 export const zIndexes = {};

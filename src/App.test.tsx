@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import App from "./App";
 import { ClassName, cls, tIds } from "./infra";
 
@@ -67,7 +67,7 @@ describe("Slaptuk app", () => {
     });
   });
 
-  describe("LOADING", () => {
+  describe("LOADING SUBITEMS", () => {
     describe("clicking on an item that requires loading", () => {
       beforeEach(() => fireEvent.click(getChevronForItem("2")));
 
@@ -76,7 +76,11 @@ describe("Slaptuk app", () => {
       });
 
       describe("when loading finishes", () => {
-        beforeEach(() => jest.runAllTimers());
+        beforeEach(() => {
+          act(() => {
+            jest.runAllTimers();
+          });
+        });
 
         it("should show some items subitems for second", () => {
           expect(queryChildrenContainerForItem("2")).toBeInTheDocument();
@@ -125,13 +129,19 @@ describe("Slaptuk app", () => {
       });
 
       describe("after items have been loaded", () => {
-        beforeEach(() => jest.runAllTimers());
+        beforeEach(() => {
+          act(() => {
+            jest.runAllTimers();
+          });
+        });
         it("should show some items", () => {
           expect(getAllRows().length).toBeGreaterThan(1);
         });
       });
     });
   });
+
+  it.todo("SELECTION");
 
   describe("CHANGE SIDEBAR WIDTH AND VISIBILITY", () => {
     it("By default sidebar width is 300px", () => {
@@ -163,12 +173,77 @@ describe("Slaptuk app", () => {
     });
   });
 
-  //EDIT-REMOVE (via context menu)
+  describe("SIDEBAR CONTEXT MENU EDIT/REMOVE", () => {
+    it("clicking on a first item options should show a context menu close to it", () => {
+      fireEvent.click(getContextMenuIcon("1"));
+      expect(getContextMenu()).toBeInTheDocument();
+
+      fireEvent.click(document);
+      expect(getContextMenu()).not.toBeInTheDocument();
+    });
+
+    describe("clicking menu button on First item", () => {
+      beforeEach(() => {
+        fireEvent.click(getChevronForItem("1"));
+        fireEvent.click(getContextMenuIcon("1"));
+      });
+
+      describe("then clicking remove", () => {
+        beforeEach(() => {
+          fireEvent.click(getDeleteContextMenu());
+        });
+        it("should remove it and its children from the sidebar", () => {
+          expect(queryRowForItem("1")).not.toBeInTheDocument();
+          expect(queryRowForItem("1.1")).not.toBeInTheDocument();
+        });
+      });
+
+      describe("then clicking rename", () => {
+        beforeEach(() => {
+          fireEvent.click(getRenameContextMenuOption());
+        });
+        it("should show input field with a item title value", () => {
+          expect(queryRowTitleInputForItem("1")).toBeInTheDocument();
+          expect(queryRowTitleInputForItem("1")).toHaveValue("First");
+        });
+
+        describe("entering new name", () => {
+          beforeEach(() => {
+            fireEvent.change(getRowTitleInputForItem("1"), {
+              target: { value: "First New Title" },
+            });
+          });
+          describe("and pressing enter", () => {
+            beforeEach(() => {
+              fireEvent.keyUp(getRowTitleInputForItem("1"), { key: "Enter" });
+            });
+            it("removes input and aplies new name to the first item", () => {
+              expect(queryRowTitleInputForItem("1")).not.toBeInTheDocument();
+              expect(getRowTextForItem("1")).toHaveTextContent(
+                "First New Title"
+              );
+            });
+          });
+          describe("and bluring element", () => {
+            beforeEach(() => {
+              fireEvent.blur(getRowTitleInputForItem("1"));
+            });
+            it("removes input and aplies new name to the first item", () => {
+              expect(queryRowTitleInputForItem("1")).not.toBeInTheDocument();
+              expect(getRowTextForItem("1")).toHaveTextContent(
+                "First New Title"
+              );
+            });
+          });
+        });
+      });
+    });
+  });
 });
 
 //actions
 const clickHideLeftSidebar = () => fireEvent.click(get(tIds.toggleSidebar));
-const getAllRows = () => getAll(/row-*/);
+const getAllRows = () => document.getElementsByClassName(cls.row);
 
 //selectors
 const getSidebar = () => getByClass(cls.leftSidebar);
@@ -178,10 +253,21 @@ const getLoadingForItem = (itemId: string) => get("loading-" + itemId);
 const queryChildrenContainerForItem = (itemId: string) =>
   query("children-" + itemId);
 const queryRowForItem = (itemId: string) => query("row-" + itemId);
+const queryRowTitleInputForItem = (itemId: string) =>
+  query("rowTitleInput-" + itemId);
+const getRowTitleInputForItem = (itemId: string) =>
+  get("rowTitleInput-" + itemId);
 const getFocusButtonForItem = (itemId: string) => get("circle-" + itemId);
 const getUnfocusButton = (itemId: string) => get("unfocus-" + itemId);
 const queryUnfocusButton = (itemId: string) => query("unfocus-" + itemId);
 const getRowForItem = (itemId: string) => get("row-" + itemId);
+const getRowTextForItem = (itemId: string) => get("rowText-" + itemId);
+
+//Context Menu
+const getContextMenuIcon = (itemId: string) => get("menu-" + itemId);
+const getContextMenu = () => getByClass(cls.contextMenu);
+const getDeleteContextMenu = () => get(tIds.contextMenuDelete);
+const getRenameContextMenuOption = () => get(tIds.contextMenuRename);
 
 //infra
 const get = (testId: string | RegExp) => screen.getByTestId(testId);

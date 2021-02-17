@@ -37,6 +37,10 @@ export const css = {
   class: cssClass,
   active: cssClassOnActive,
   hover: cssClassOnHover,
+  focus: (className: string, style: Styles) =>
+    selector(`.${className}:focus`, style),
+  parentHover: (parentClass: string, childClass: string, style: Styles) =>
+    selector(`.${parentClass}:hover .${childClass}`, style),
   text: cssText,
   selector,
   styles,

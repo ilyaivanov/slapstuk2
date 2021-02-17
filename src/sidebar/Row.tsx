@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { cls, colors, css, icons, utils } from "../infra";
-import * as items from "../items";
+import { actions, RenameState } from "../items";
+
 const PADDING_PER_LEVEL = 15;
 const BASE_PADDING = 4;
 export const getPaddingForLevel = (level: number) =>
@@ -11,8 +12,9 @@ type RowProps = {
   level: number;
   isFocused?: boolean;
   onClick: () => void;
+  renameState: RenameState | undefined;
 };
-const Row = ({ item, isFocused, level, onClick }: RowProps) => {
+const Row = ({ item, isFocused, level, onClick, renameState }: RowProps) => {
   const isHome = item.id === "HOME";
   return (
     <div
@@ -40,7 +42,7 @@ const Row = ({ item, isFocused, level, onClick }: RowProps) => {
               "data-testid": "unfocus-" + item.id,
               onClick: (e) => {
                 e.stopPropagation();
-                items.actions.unfocus();
+                actions.unfocus();
               },
             })
           : icons.circle({
@@ -48,25 +50,84 @@ const Row = ({ item, isFocused, level, onClick }: RowProps) => {
               "data-testid": "circle-" + item.id,
               onClick: (e) => {
                 e.stopPropagation();
-                items.actions.focusItem(item);
+                actions.focusItem(item);
               },
             }))}
 
-      <div className={cls.rowText}>{item.title}</div>
+      {renameState && renameState.itemBeingRenamed == item.id ? (
+        <RowInputField id={item.id} name={renameState.newName} />
+      ) : (
+        <div data-testid={"rowText-" + item.id} className={cls.rowText}>
+          {item.title}
+        </div>
+      )}
+
+      <button
+        className={cls.rowMenuButton}
+        onClick={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          actions.assignUiState({
+            contextMenu: {
+              x: rect.left,
+              y: rect.top,
+              itemId: item.id,
+            },
+          });
+          //stop ContextMenu view from firing click event
+          e.stopPropagation();
+        }}
+      >
+        {icons.threeDotsVertical({
+          className: cls.rowMenuIcon + " " + cls.rowIcon,
+          "data-testid": "menu-" + item.id,
+        })}
+      </button>
     </div>
   );
 };
 
+const RowInputField = ({ id, name }: { id: string; name: string }) => {
+  const onKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") actions.finishRenamingItem();
+  };
+  return (
+    <input
+      type="text"
+      className={cls.rowTitleInput}
+      ref={(ref) => ref?.focus()}
+      data-testid={"rowTitleInput-" + id}
+      value={name}
+      onKeyUp={onKeyUp}
+      onChange={(e) => actions.setNewName(e.currentTarget.value)}
+      onBlur={(e) => {
+        console.log("applying renmae via blur", e);
+        actions.finishRenamingItem();
+      }}
+    />
+  );
+};
+
+const ROW_HEIGHT = 27;
 css.class(cls.row, {
   display: "flex",
   alignItems: "center",
-  height: 27,
+  position: "relative",
+  height: ROW_HEIGHT,
+  cursor: "pointer",
+});
+css.hover(cls.row, {
+  backgroundColor: colors.sidebarRowHover,
 });
 
 css.class(cls.rowText, {
-  lineHeight: 16,
+  wordBreak: "keep-all",
 });
 
+css.class(cls.rowTitleInput, {
+  flex: 1,
+  fontSize: 16,
+  border: "none",
+});
 css.class(cls.rowFocused, {
   fontWeight: "bold",
   fontSize: 20,
@@ -105,6 +166,37 @@ css.class(cls.rowCircle, {
   height: 9,
   marginRight: 6,
   marginLeft: 4,
+});
+
+css.class(cls.rowMenuButton, {
+  position: "absolute",
+  cursor: "pointer",
+  top: 5,
+  right: (ROW_HEIGHT - 15) / 2,
+  height: 10,
+  width: 10,
+  borderRadius: 5,
+  opacity: 0,
+  backgroundColor: "transparent",
+  border: "none",
+  transition: "opacity 100ms ease-out",
+});
+
+css.focus(cls.rowMenuButton, {
+  outline: 0,
+});
+
+css.class(cls.rowMenuIcon, {
+  height: 15,
+});
+
+css.parentHover(cls.row, cls.rowMenuButton, {
+  opacity: 1,
+});
+
+css.parentHover(cls.rowMenuButton, cls.rowMenuIcon, {
+  color: colors.iconHover,
+  transform: "scale(1.2)",
 });
 
 export default Row;

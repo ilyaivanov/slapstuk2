@@ -1,4 +1,5 @@
 import React from "react";
+import ContextMenuView from "./ContextMenu";
 import { cls, colors, css, icons, tIds, utils } from "./infra";
 import initialItems from "./initialItems";
 import * as items from "./items";
@@ -22,37 +23,41 @@ function App() {
   const allItems = state.items;
   const focusedNode = allItems[state.uiOptions.focusedNode];
   return (
-    <AppLayout
-      state={state}
-      gallery={<div>Gallery</div>}
-      topbar={
-        <div>
-          <button
-            data-testid={tIds.toggleSidebar}
-            onClick={() =>
-              items.actions.assignUiOptions({
-                isLeftSidebarVisible: !state.uiOptions.isLeftSidebarVisible,
-              })
-            }
-          >
-            left
-          </button>
-        </div>
-      }
-      sidebar={
-        <>
-          <RowWithChildren
-            item={focusedNode}
-            allItems={allItems}
-            level={-1}
-            isRootItem
-          />
-          <SidebarWidthAdjuster
-            isMouseDown={state.uiState.isMouseDownOnAdjuster}
-          />
-        </>
-      }
-    />
+    <>
+      <AppLayout
+        state={state}
+        gallery={<div>Gallery</div>}
+        topbar={
+          <div>
+            <button
+              data-testid={tIds.toggleSidebar}
+              onClick={() =>
+                items.actions.assignUiOptions({
+                  isLeftSidebarVisible: !state.uiOptions.isLeftSidebarVisible,
+                })
+              }
+            >
+              left
+            </button>
+          </div>
+        }
+        sidebar={
+          <>
+            <RowWithChildren
+              item={focusedNode}
+              allItems={allItems}
+              level={-1}
+              renameState={state.uiState.renameState}
+              isRootItem
+            />
+            <SidebarWidthAdjuster
+              isMouseDown={state.uiState.isMouseDownOnAdjuster}
+            />
+          </>
+        }
+      />
+      <ContextMenuView options={state.uiState.contextMenu} />
+    </>
   );
 }
 
@@ -107,6 +112,7 @@ type Props = {
   level: number;
   item: Item;
   allItems: Items;
+  renameState: items.RenameState | undefined;
   isRootItem?: boolean;
 };
 
@@ -119,6 +125,7 @@ class RowWithChildren extends React.PureComponent<Props> {
           level={this.props.level + 1}
           item={this.props.allItems[id]}
           allItems={this.props.allItems}
+          renameState={this.props.renameState}
         />
       ))}
     </div>
@@ -145,6 +152,7 @@ class RowWithChildren extends React.PureComponent<Props> {
       item={item}
       level={level}
       isFocused={this.props.isRootItem}
+      renameState={this.props.renameState}
       onClick={this.onRowClick}
     />
   );
