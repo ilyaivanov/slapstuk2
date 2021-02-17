@@ -153,17 +153,15 @@ export const actions = {
       options: { focusedNode: "HOME" },
     }),
 
-  setSidebarWidth: (sidebarWidth: number) =>
-    globalDispatch({
-      type: "change-ui-options",
-      options: { leftSidebarWidth: sidebarWidth },
-    }),
+  setSidebarWidth: (leftSidebarWidth: number) =>
+    actions.assignUiOptions({ leftSidebarWidth }),
 
   assignUiState: (uiState: UIState) =>
     globalDispatch({
       type: "change-ui-state",
       uiState,
     }),
+
   assignUiOptions: (options: Partial<UIOptions>) =>
     globalDispatch({
       type: "change-ui-options",
