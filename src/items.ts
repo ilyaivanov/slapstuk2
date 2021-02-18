@@ -8,6 +8,19 @@ export type RootState = {
   uiState: UIState;
 };
 
+export const initialState: RootState = {
+  items: {},
+  uiOptions: {
+    focusedNode: "HOME",
+    selectedNode: "HOME",
+    leftSidebarWidth: 300,
+    isLeftSidebarVisible: true,
+  },
+  uiState: {
+    isMouseDownOnAdjuster: false,
+  },
+};
+
 type UIOptions = {
   focusedNode: string;
   selectedNode: string;
@@ -336,12 +349,62 @@ export const isOpenAtSidebar = (item: Item) =>
     ? item.isOpenFromSidebar
     : false);
 
+export const isOpenAtGallery = (item: Item) =>
+  isContainer(item) && !item.isCollapsedInGallery;
+
 export const getItemColor = (item: Item): string => {
   if (isFolder(item)) return colors.folderColor;
   if (isChannel(item)) return colors.channelColor;
   if (isPlaylist(item)) return colors.playlistColor;
   if (isVideo(item)) return colors.videoColor;
   return "white";
+};
+export const getChildren = (itemId: string, allItems: Items): Item[] => {
+  const item = allItems[itemId];
+  if (isContainer(item)) return item.children.map((id) => allItems[id]);
+  else return [];
+};
+
+export const getPreviewImages = (
+  item: Item,
+  count: number,
+  allItems: Items
+): string[] =>
+  getChildren(item.id, allItems)
+    .map((c) => getFirstImage(c, allItems))
+    .filter((x) => !!x)
+    .slice(0, count) as string[];
+
+export const getFirstImage = (
+  item: Item,
+  allItems: Items
+): string | undefined => {
+  if (isFolder(item)) {
+    const children = getChildren(item.id, allItems);
+    return children
+      .map((c) => getFirstImage(c, allItems))
+      .filter((x) => !!x)[0] as string;
+  }
+  return getImageSrc(item) as string;
+};
+
+export const getFirstVideo = (
+  item: Item,
+  allItems: Items
+): YoutubeVideo | undefined => {
+  if (isContainer(item)) {
+    const children = getChildren(item.id, allItems);
+    return children
+      .map((c) => getFirstVideo(c, allItems))
+      .filter((x) => !!x)[0] as YoutubeVideo;
+  } else if (isVideo(item)) return item;
+};
+
+export const getImageSrc = (item: Item): string | undefined => {
+  if (isVideo(item))
+    return `https://i.ytimg.com/vi/${item.videoId}/mqdefault.jpg`;
+  else if (isPlaylist(item) || isChannel(item)) return item.image;
+  else return undefined;
 };
 
 //Yes, I know, global dispatch and accesing it from compoents with any props nor context

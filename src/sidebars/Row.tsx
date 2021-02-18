@@ -12,7 +12,7 @@ type RowProps = {
   level: number;
   isFocused?: boolean;
   isSelected?: boolean;
-  onClick: () => void;
+  onChevronClick: (e: React.MouseEvent<SVGSVGElement>) => void;
   renameState: RenameState | undefined;
 };
 const Row = ({
@@ -20,7 +20,7 @@ const Row = ({
   isFocused,
   isSelected,
   level,
-  onClick,
+  onChevronClick,
   renameState,
 }: RowProps) => {
   const isHome = item.id === "HOME";
@@ -43,7 +43,7 @@ const Row = ({
             [cls.rowIcon]: true,
           }),
           "data-testid": "chevron-" + item.id,
-          onClick: onClick,
+          onClick: onChevronClick,
         })}
       {!isHome &&
         (isFocused

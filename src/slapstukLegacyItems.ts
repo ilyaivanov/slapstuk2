@@ -69,7 +69,6 @@ export const convertLegacyItems = (legacyItems: LegacyItems): Items => {
   };
   convertFolder(legacyItems["HOME"]);
 
-  console.log(items);
   return items;
 };
 

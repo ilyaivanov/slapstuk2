@@ -31,6 +31,31 @@ const classes = {
   //Context Menu
   contextMenu: "",
   contextMenuRow: "",
+
+  //Gallery
+  galleryColumnContainer: "",
+  galleryColumn: "",
+
+  //Gallery Cards
+  card: "",
+  cardText: "",
+  cardTextForFolder: "",
+  cardPreviewContainer: "",
+  cardImageWithTextContainer: "",
+  subtracksContainer: "",
+  cardTypeBoxTriangleContainer: "",
+  cardTypeBoxTextContainer: "",
+  cardTypeBoxTriangle: "",
+  cardTypeBoxTrianglePlaylist: "",
+  cardTypeBoxTriangleChannel: "",
+  cardTypeBoxTriangleFolder: "",
+
+  //Gallery Subtracks
+  subtrack: "",
+  subtrackImage: "",
+  subtrackChannelImage: "",
+  subtrackFolderImage: "",
+  subtrackPlaylistImage: "",
   //Utility
   none: "",
 };

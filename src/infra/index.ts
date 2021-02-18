@@ -39,6 +39,8 @@ export const css = {
   hover: cssClassOnHover,
   focus: (className: string, style: Styles) =>
     selector(`.${className}:focus`, style),
+  lastOfType: (className: string, style: Styles) =>
+    selector(`.${className}:last-of-type`, style),
   parentHover: (parentClass: string, childClass: string, style: Styles) =>
     selector(`.${parentClass}:hover .${childClass}`, style),
   text: cssText,

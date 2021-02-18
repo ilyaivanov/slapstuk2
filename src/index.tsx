@@ -9,6 +9,10 @@ css.tag("body", {
   fontFamily: `Roboto, "Source Sans Pro", "Trebuchet MS", "Lucida Grande", "Bitstream Vera Sans", "Helvetica Neue", sans-serif`,
 });
 
+css.selector("*", {
+  boxSizing: "border-box",
+});
+
 ReactDOM.render(
   <React.StrictMode>
     <App />

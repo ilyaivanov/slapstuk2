@@ -1,34 +1,28 @@
 import React from "react";
-import ContextMenuView from "./ContextMenu";
-import { cls, colors, css, icons, tIds } from "./infra";
+import ContextMenuView from "./commonComponents/ContextMenu";
+import Gallery from "./gallery/Gallery";
+import { tIds, css, colors, cls, utils } from "./infra";
 import initialItems from "./initialItems";
 import * as items from "./items";
-import AppLayout from "./Layout";
-import Row, { getPaddingForLevel } from "./sidebar/Row";
+import LeftSidebar from "./sidebars/LeftSidebar";
 
 function App() {
   const initialState: items.RootState = {
+    ...items.initialState,
     items: initialItems,
-    uiOptions: {
-      focusedNode: "HOME",
-      selectedNode: "HOME",
-      leftSidebarWidth: 300,
-      isLeftSidebarVisible: true,
-    },
-    uiState: {
-      isMouseDownOnAdjuster: false,
-    },
   };
   const [state, dispatch] = React.useReducer(items.reducer, initialState);
   items.setGlobalDispatch(dispatch);
-  const allItems = state.items;
-  const focusedNode = allItems[state.uiOptions.focusedNode];
   return (
     <>
-      <AppLayout
-        state={state}
-        gallery={<div>{allItems[state.uiOptions.selectedNode].title}</div>}
-        topbar={
+      <div
+        className={utils.cn({
+          [cls.app]: true,
+          [cls.appDuringDrag]: state.uiState.isMouseDownOnAdjuster,
+        })}
+      >
+        <LeftSidebar state={state} />
+        <div className={cls.topbar}>
           <div>
             <button
               data-testid={tIds.toggleSidebar}
@@ -41,168 +35,52 @@ function App() {
               left
             </button>
           </div>
-        }
-        sidebar={
-          <>
-            <div className={cls.sidebarHeader}>
-              {icons.folderPlus({
-                "data-testid": "sidebarCreateFolder",
-                className: cls.rowIcon + " " + cls.createFolderIcon,
-                onClick: () => items.actions.addNewForder(),
-              })}
-            </div>
-            <div className={cls.sidebarScrollArea}>
-              <RowWithChildren
-                item={focusedNode}
-                allItems={allItems}
-                level={-1}
-                focusedNodeId={state.uiOptions.selectedNode}
-                renameState={state.uiState.renameState}
-                isRootItem
-              />
-            </div>
-            <SidebarWidthAdjuster
-              isMouseDown={state.uiState.isMouseDownOnAdjuster}
-            />
-          </>
-        }
-      />
+        </div>
+        <div className={cls.gallery}>
+          <Gallery
+            allItems={state.items}
+            nodeSelected={state.uiOptions.selectedNode}
+          />
+        </div>
+        <div className={cls.player}>Player</div>
+      </div>
       <ContextMenuView options={state.uiState.contextMenu} />
     </>
   );
 }
 
-type SidebarWidthAdjusterProps = {
-  isMouseDown: boolean;
-};
-class SidebarWidthAdjuster extends React.PureComponent<SidebarWidthAdjusterProps> {
-  componentDidMount() {
-    document.addEventListener("mousemove", this.onMouseMove);
-    document.addEventListener("mouseup", this.onMouseUp);
-  }
-
-  onMouseMove = (e: MouseEvent) => {
-    if (this.props.isMouseDown) items.actions.setSidebarWidth(e.clientX);
-  };
-
-  onMouseUp = () =>
-    items.actions.assignUiState({
-      isMouseDownOnAdjuster: false,
-    });
-
-  onMouseDown = () =>
-    items.actions.assignUiState({
-      isMouseDownOnAdjuster: true,
-    });
-
-  render() {
-    return (
-      <div
-        className={cls.sidebarWidthAdjuster}
-        onMouseDown={this.onMouseDown}
-      />
-    );
-  }
-}
-
-css.class(cls.createFolderIcon, {
-  height: 18,
+css.tag("body", {
+  backgroundColor: colors.menu,
+  color: colors.textRegular,
+});
+css.class(cls.appDuringDrag, {
+  userSelect: "none",
+});
+css.class(cls.app, {
+  height: "100vh",
+  display: "grid",
+  gridTemplateRows: "auto 1fr auto",
+  gridTemplateColumns: "auto 1fr auto",
+  gridTemplateAreas: `
+    "header header header"
+    "leftSidebar gallery rightSidebar"
+    "player player player"
+  `,
+});
+css.class(cls.topbar, {
+  gridArea: "header",
+  height: 60,
+});
+css.class(cls.gallery, {
+  gridArea: "gallery",
+  backgroundColor: colors.gallery,
 });
 
-css.class(cls.sidebarHeader, {
-  display: "flex",
-  justifyContent: "flex-end",
-  paddingRight: 5,
+css.class(cls.player, {
+  gridArea: "player",
+  height: 40,
 });
-
-css.class(cls.sidebarWidthAdjuster, {
-  position: "absolute",
-  right: -1,
-  width: 3,
-  top: 0,
-  bottom: 0,
-  cursor: "col-resize",
-  transition: "background-color 200ms ease-out",
+css.class(cls.rightSidebar, {
+  gridArea: "rightSidebar",
 });
-
-css.hover(cls.sidebarWidthAdjuster, {
-  backgroundColor: colors.primary,
-});
-
-css.class(cls.sidebarScrollArea, {
-  overflowY: "auto",
-});
-
-css.text(css.styles.cssTextForScrollBar(cls.sidebarScrollArea, { width: 8 }));
-
-type Props = {
-  level: number;
-  item: Item;
-  allItems: Items;
-  renameState: items.RenameState | undefined;
-  focusedNodeId: string;
-  isRootItem?: boolean;
-};
-
-class RowWithChildren extends React.PureComponent<Props> {
-  renderChildren = () => (
-    <div data-testid={"children-" + this.props.item.id}>
-      {items.isContainer(this.props.item) &&
-        this.props.item.children.map((id) => (
-          <RowWithChildren
-            key={id}
-            level={this.props.level + 1}
-            item={this.props.allItems[id]}
-            allItems={this.props.allItems}
-            focusedNodeId={this.props.focusedNodeId}
-            renameState={this.props.renameState}
-          />
-        ))}
-    </div>
-  );
-
-  renderLoading = () => (
-    <div
-      data-testid={"loading-" + this.props.item.id}
-      style={{ paddingLeft: getPaddingForLevel(this.props.level + 2) }}
-    >
-      Loading...
-    </div>
-  );
-
-  onChevronClick = () => {
-    if (items.isContainer(this.props.item)) {
-      items.actions.toggleItemInSidebar(this.props.item);
-      const { item } = this.props;
-      if (items.isNeedsToBeLoaded(item)) {
-        items.actions.startLoading(this.props.item);
-      }
-    }
-  };
-
-  renderRow = (item: Item, level: number) => (
-    <Row
-      item={item}
-      level={level}
-      isFocused={this.props.isRootItem}
-      isSelected={item.id === this.props.focusedNodeId}
-      renameState={this.props.renameState}
-      onClick={this.onChevronClick}
-    />
-  );
-
-  render() {
-    const { item, level, isRootItem } = this.props;
-    return (
-      <>
-        {this.renderRow(item, level)}
-        {(items.isOpenAtSidebar(item) || isRootItem) &&
-          (items.isLoading(item)
-            ? this.renderLoading()
-            : this.renderChildren())}
-      </>
-    );
-  }
-}
-
 export default App;

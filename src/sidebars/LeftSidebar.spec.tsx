@@ -1,15 +1,16 @@
 import React from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react";
-import App from "./App";
-import { ClassName, cls, tIds } from "./infra";
+import App from "../App";
+import { ClassName, cls, tIds } from "../infra";
+jest.mock("../gallery/Gallery", () => () => <div>Dummy Gallery</div>);
 
-jest.mock("./initialItems", () => {
+jest.mock("../initialItems", () => {
   const initialItems: Items = {
     HOME: {
       id: "HOME",
       type: "folder",
       title: "Home",
-      children: ["1", "2"],
+      children: ["1", "2", "YoutubePlaylist"],
     },
     1: {
       id: "1",
@@ -23,6 +24,14 @@ jest.mock("./initialItems", () => {
       title: "Second",
       children: [],
     },
+    YoutubePlaylist: {
+      type: "YTplaylist",
+      id: "YoutubePlaylist",
+      title: "YoutubePlaylist",
+      image: "some image",
+      playlistId: "playlistID",
+      children: [],
+    },
     "1.1": {
       id: "1.1",
       type: "folder",
@@ -33,17 +42,13 @@ jest.mock("./initialItems", () => {
   return initialItems;
 });
 
-describe("Slaptuk app", () => {
+describe("Slaptuk sidebar", () => {
   beforeEach(() => {
     jest.useFakeTimers();
     render(<App />);
   });
 
   describe("FIRST RENDER ", () => {
-    it("have three rows", () => {
-      expect(getAllRows()).toHaveLength(3);
-    });
-
     it("First item is closed", () => {
       expect(queryChildrenContainerForItem("1")).not.toBeInTheDocument();
       expect(getChevronForItem("1")).not.toHaveClass(cls.rowChevronRotated);
@@ -267,7 +272,6 @@ describe("Slaptuk app", () => {
   });
 
   it.todo("load user settings from backend");
-  it.todo("use items structure from vanilla project");
 });
 
 //actions
