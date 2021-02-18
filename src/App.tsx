@@ -46,8 +46,9 @@ function App() {
           <>
             <div className={cls.sidebarHeader}>
               {icons.folderPlus({
+                "data-testid": "sidebarCreateFolder",
                 className: cls.rowIcon + " " + cls.createFolderIcon,
-                // onClick:
+                onClick: () => items.actions.addNewForder(),
               })}
             </div>
             <div className={cls.sidebarScrollArea}>

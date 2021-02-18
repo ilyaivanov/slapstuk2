@@ -32,19 +32,19 @@ export type ContextMenu = {
   itemId: string;
 };
 
-const itemsReducer = (items: Items, action: Action): Items => {
+const itemsReducer = (items: Items, action: RootAction): Items => {
   if (action.type == "change-item") {
     return {
       ...items,
-      [action.itemId]: {
-        ...items[action.itemId],
-        ...action.newItemProps,
+      [action.payload.id]: {
+        ...items[action.payload.id],
+        ...action.payload,
       },
     };
   }
   if (action.type == "item-delete") {
     const parent = Object.values(items).find(
-      (item) => item.children.indexOf(action.itemId) >= 0
+      (item) => item.children.indexOf(action.payload) >= 0
     );
     if (parent) {
       let copy = { ...items };
@@ -53,22 +53,22 @@ const itemsReducer = (items: Items, action: Action): Items => {
       // delete copy[action.itemId];
       copy[parent.id] = {
         ...parent,
-        children: parent.children.filter((id) => id != action.itemId),
+        children: parent.children.filter((id) => id != action.payload),
       };
       return copy;
     } else return items;
   }
   if (action.type == "item-loaded") {
-    const newItems = action.items.reduce(
+    const newItems = action.payload.items.reduce(
       (ac, item) => ({ ...ac, [item.id]: item }),
       {}
     );
     return {
       ...items,
-      [action.itemId]: {
-        ...items[action.itemId],
+      [action.payload.itemId]: {
+        ...items[action.payload.itemId],
         isLoading: false,
-        children: action.items.map((i) => i.id),
+        children: action.payload.items.map((i) => i.id),
       },
       ...newItems,
     };
@@ -76,7 +76,7 @@ const itemsReducer = (items: Items, action: Action): Items => {
   return items;
 };
 
-export const reducer = (state: RootState, action: Action): RootState => {
+export const reducer = (state: RootState, action: RootAction): RootState => {
   if (
     action.type == "change-item" ||
     action.type == "item-loaded" ||
@@ -92,7 +92,7 @@ export const reducer = (state: RootState, action: Action): RootState => {
       ...state,
       uiOptions: {
         ...state.uiOptions,
-        ...action.options,
+        ...action.payload,
       },
     };
   }
@@ -101,7 +101,7 @@ export const reducer = (state: RootState, action: Action): RootState => {
       ...state,
       uiState: {
         ...state.uiState,
-        ...action.uiState,
+        ...action.payload,
       },
     };
   }
@@ -112,8 +112,8 @@ export const reducer = (state: RootState, action: Action): RootState => {
         ...state.uiState,
         renameState: {
           ...state.uiState.renameState,
-          itemBeingRenamed: action.itemId,
-          newName: state.items[action.itemId].title,
+          itemBeingRenamed: action.payload,
+          newName: state.items[action.payload].title,
         },
       },
     };
@@ -126,7 +126,7 @@ export const reducer = (state: RootState, action: Action): RootState => {
           ...state.uiState,
           renameState: {
             ...state.uiState.renameState,
-            newName: action.name,
+            newName: action.payload,
           },
         },
       };
@@ -137,8 +137,8 @@ export const reducer = (state: RootState, action: Action): RootState => {
     if (renameState) {
       const newItems = itemsReducer(state.items, {
         type: "change-item",
-        itemId: renameState.itemBeingRenamed,
-        newItemProps: {
+        payload: {
+          id: renameState.itemBeingRenamed,
           title: renameState.newName,
         },
       });
@@ -152,53 +152,55 @@ export const reducer = (state: RootState, action: Action): RootState => {
       };
     }
   }
+  if (action.type == "item-create") {
+    const { selectedNode } = state.uiOptions;
+    const newNode: Item = {
+      id: Math.random() + "",
+      children: [],
+      title: "New Folder",
+    };
+
+    return {
+      ...state,
+      items: {
+        ...state.items,
+        [selectedNode]: {
+          ...state.items[selectedNode],
+          children: [newNode.id].concat(state.items[selectedNode].children),
+        },
+        [newNode.id]: newNode,
+      },
+      uiState: {
+        ...state.uiState,
+        renameState: {
+          itemBeingRenamed: newNode.id,
+          newName: newNode.title,
+        },
+      },
+    };
+  }
   return state;
 };
 
-type Action =
-  | ItemAction
-  | ItemLoaded
-  | ChangeUIOptions
-  | ChangeUIState
-  | StartRenamingItem
-  | SetNewName
-  | ApplyItemRename
-  | DeleteItem;
-
-type ItemAction = {
-  type: "change-item";
-  itemId: string;
-  newItemProps: Partial<Item>;
+type ActionPayload<ActionStringType, PayloadType> = {
+  type: ActionStringType;
+  payload: PayloadType;
 };
 
-type ItemLoaded = {
-  type: "item-loaded";
-  itemId: string;
-  items: Item[];
+type Action<ActionStringType> = {
+  type: ActionStringType;
 };
-type ChangeUIOptions = {
-  type: "change-ui-options";
-  options: Partial<UIOptions>;
-};
-type ChangeUIState = {
-  type: "change-ui-state";
-  uiState: Partial<UIState>;
-};
-type DeleteItem = {
-  type: "item-delete";
-  itemId: string;
-};
-type StartRenamingItem = {
-  type: "item-start-rename";
-  itemId: string;
-};
-type SetNewName = {
-  type: "item-set-new-name";
-  name: string;
-};
-type ApplyItemRename = {
-  type: "item-apply-rename";
-};
+
+type RootAction =
+  | ActionPayload<"change-item", Partial<Item> & { id: string }>
+  | ActionPayload<"item-loaded", { itemId: string; items: Item[] }>
+  | ActionPayload<"change-ui-options", Partial<UIOptions>>
+  | ActionPayload<"change-ui-state", Partial<UIState>>
+  | ActionPayload<"item-start-rename", string>
+  | ActionPayload<"item-set-new-name", string>
+  | Action<"item-apply-rename">
+  | ActionPayload<"item-delete", string>
+  | Action<"item-create">;
 
 export const actions = {
   startLoading: (item: Item) => {
@@ -215,8 +217,8 @@ export const actions = {
 
     globalDispatch({
       type: "change-item",
-      itemId: item.id,
-      newItemProps: {
+      payload: {
+        id: item.id,
         isLoading: true,
       },
     });
@@ -225,71 +227,59 @@ export const actions = {
   finishLoading: (item: Item, subitems: Item[]) =>
     globalDispatch({
       type: "item-loaded",
-      itemId: item.id,
-      items: subitems,
+      payload: { itemId: item.id, items: subitems },
     }),
 
   toggleItemInSidebar: (item: Item) =>
     globalDispatch({
       type: "change-item",
-      itemId: item.id,
-      newItemProps: {
-        isOpen: !item.isOpen,
-      },
+      payload: { id: item.id, isOpen: !item.isOpen },
     }),
 
   focusItem: (item: Item) => {
     if (item.children.length == 0) {
       actions.startLoading(item);
     }
-    globalDispatch({
-      type: "change-ui-options",
-      options: { focusedNode: item.id },
-    });
+    actions.assignUiOptions({ focusedNode: item.id });
   },
 
-  unfocus: () =>
-    globalDispatch({
-      type: "change-ui-options",
-      options: { focusedNode: "HOME" },
-    }),
+  unfocus: () => actions.assignUiOptions({ focusedNode: "HOME" }),
 
   setSidebarWidth: (leftSidebarWidth: number) =>
     actions.assignUiOptions({ leftSidebarWidth }),
 
   assignUiState: (uiState: Partial<UIState>) =>
-    globalDispatch({ type: "change-ui-state", uiState }),
+    globalDispatch({ type: "change-ui-state", payload: uiState }),
 
   assignUiOptions: (options: Partial<UIOptions>) =>
-    globalDispatch({ type: "change-ui-options", options }),
+    globalDispatch({ type: "change-ui-options", payload: options }),
 
-  selectItem: (itemId: string) =>
-    globalDispatch({
-      type: "change-ui-options",
-      options: { selectedNode: itemId },
-    }),
+  selectItem: (selectedNode: string) =>
+    actions.assignUiOptions({ selectedNode }),
 
   deleteItem: (itemId: string) =>
-    globalDispatch({ type: "item-delete", itemId }),
+    globalDispatch({ type: "item-delete", payload: itemId }),
 
   startRenameItem: (itemId: string) =>
-    globalDispatch({ type: "item-start-rename", itemId }),
+    globalDispatch({ type: "item-start-rename", payload: itemId }),
 
   setNewName: (name: string) =>
-    globalDispatch({ type: "item-set-new-name", name }),
+    globalDispatch({ type: "item-set-new-name", payload: name }),
+
+  addNewForder: () => globalDispatch({ type: "item-create" }),
 
   finishRenamingItem: () => globalDispatch({ type: "item-apply-rename" }),
 
   cancelRenamingItem: () =>
     globalDispatch({
       type: "change-ui-state",
-      uiState: { renameState: undefined },
+      payload: { renameState: undefined },
     }),
 };
 
 //Yes, I know, global dispatch and accesing it from compoents with any props nor context
 //This is fine, since actions never change, I do not need to mess with a passing actions to props
 //Inspired by Elm when only data is passed around, all actions are global
-let globalDispatch: React.Dispatch<Action>;
-export const setGlobalDispatch = (dispatch: React.Dispatch<Action>) =>
+let globalDispatch: React.Dispatch<RootAction>;
+export const setGlobalDispatch = (dispatch: React.Dispatch<RootAction>) =>
   (globalDispatch = dispatch);

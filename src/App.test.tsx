@@ -249,7 +249,16 @@ describe("Slaptuk app", () => {
   });
 
   describe("SIDEBAR HEADER ACTIONS", () => {
-    it("at Home selected creating a new node adds a new node as first child of HOME with edited node", () => {});
+    it("at Home selected creating a new node adds a new node as first child of HOME with edited node", () => {
+      Math.random = () => 555;
+      fireEvent.click(getCreateFolderIcon());
+      expect(getRowTitleInputForItem("555")).toHaveValue("New Folder");
+      fireEvent.change(getRowTitleInputForItem("555"), {
+        target: { value: "My Foo" },
+      });
+      fireEvent.keyUp(getRowTitleInputForItem("555"), { key: "Enter" });
+      expect(getRowTextForItem("555")).toHaveTextContent("My Foo");
+    });
   });
 
   it.todo("load user settings from backend");
@@ -277,6 +286,9 @@ const getUnfocusButton = (itemId: string) => get("unfocus-" + itemId);
 const queryUnfocusButton = (itemId: string) => query("unfocus-" + itemId);
 const getRowForItem = (itemId: string) => get("row-" + itemId);
 const getRowTextForItem = (itemId: string) => get("rowText-" + itemId);
+
+//Sidebar
+const getCreateFolderIcon = () => get("sidebarCreateFolder");
 
 //Context Menu
 const getContextMenuIcon = (itemId: string) => get("menu-" + itemId);
