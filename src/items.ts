@@ -1,4 +1,4 @@
-import { utils } from "./infra";
+import { colors, utils } from "./infra";
 
 export type RootState = {
   items: Items;
@@ -34,19 +34,20 @@ export type ContextMenu = {
 
 const itemsReducer = (items: Items, action: RootAction): Items => {
   if (action.type == "change-item") {
+    const newItem: any = {
+      ...items[action.payload.id],
+      ...action.payload,
+    };
     return {
       ...items,
-      [action.payload.id]: {
-        ...items[action.payload.id],
-        ...action.payload,
-      },
+      [action.payload.id]: newItem,
     };
   }
   if (action.type == "item-delete") {
-    const parent = Object.values(items).find(
-      (item) => item.children.indexOf(action.payload) >= 0
+    const parent: Item | undefined = Object.values(items).find(
+      (item) => isContainer(item) && item.children.indexOf(action.payload) >= 0
     );
-    if (parent) {
+    if (parent && isContainer(parent)) {
       let copy = { ...items };
       //do not delete actual item, if it is focused I wan't it to still be display
       //Althought I don't want to save selectedITem to backend which is removed
@@ -156,28 +157,31 @@ export const reducer = (state: RootState, action: RootAction): RootState => {
     const { selectedNode } = state.uiOptions;
     const newNode: Item = {
       id: action.payload,
+      type: "folder",
       children: [],
       title: "New Folder",
     };
-
-    return {
-      ...state,
-      items: {
-        ...state.items,
-        [selectedNode]: {
-          ...state.items[selectedNode],
-          children: [newNode.id].concat(state.items[selectedNode].children),
+    const selectedNodeItem = state.items[selectedNode];
+    if (isContainer(selectedNodeItem)) {
+      return {
+        ...state,
+        items: {
+          ...state.items,
+          [selectedNode]: {
+            ...selectedNodeItem,
+            children: [newNode.id].concat(selectedNodeItem.children),
+          },
+          [newNode.id]: newNode,
         },
-        [newNode.id]: newNode,
-      },
-      uiState: {
-        ...state.uiState,
-        renameState: {
-          itemBeingRenamed: newNode.id,
-          newName: newNode.title,
+        uiState: {
+          ...state.uiState,
+          renameState: {
+            itemBeingRenamed: newNode.id,
+            newName: newNode.title,
+          },
         },
-      },
-    };
+      };
+    }
   }
   return state;
 };
@@ -187,18 +191,18 @@ type ActionPayload<ActionStringType, PayloadType> = {
   payload: PayloadType;
 };
 
-type Action<ActionStringType> = {
+type ActionPlain<ActionStringType> = {
   type: ActionStringType;
 };
 
 type RootAction =
   | ActionPayload<"change-item", Partial<Item> & { id: string }>
-  | ActionPayload<"item-loaded", { itemId: string; items: Item[] }>
   | ActionPayload<"change-ui-options", Partial<UIOptions>>
   | ActionPayload<"change-ui-state", Partial<UIState>>
+  | ActionPayload<"item-loaded", { itemId: string; items: Item[] }>
   | ActionPayload<"item-start-rename", string>
   | ActionPayload<"item-set-new-name", string>
-  | Action<"item-apply-rename">
+  | ActionPlain<"item-apply-rename">
   | ActionPayload<"item-delete", string>
   | ActionPayload<"item-create", string>;
 
@@ -209,6 +213,7 @@ export const actions = {
         .generateNumbers(Math.round(5 + Math.random() * 5))
         .map((num) => ({
           id: Math.random() + "",
+          type: "folder",
           title: "Loaded item " + num,
           children: [],
         }));
@@ -230,14 +235,14 @@ export const actions = {
       payload: { itemId: item.id, items: subitems },
     }),
 
-  toggleItemInSidebar: (item: Item) =>
+  toggleItemInSidebar: (item: ItemContainer) =>
     globalDispatch({
       type: "change-item",
-      payload: { id: item.id, isOpen: !item.isOpen },
+      payload: { id: item.id, isOpenFromSidebar: !item.isOpenFromSidebar },
     }),
 
   focusItem: (item: Item) => {
-    if (item.children.length == 0) {
+    if (isContainer(item) && item.children.length == 0) {
       actions.startLoading(item);
     }
     actions.assignUiOptions({ focusedNode: item.id });
@@ -276,6 +281,67 @@ export const actions = {
       type: "change-ui-state",
       payload: { renameState: undefined },
     }),
+};
+
+//Some behaviour on top of items
+export const isFolder = (item: Item): item is Folder => {
+  return item.type == "folder";
+};
+export const isPlaylist = (item: Item): item is YoutubePlaylist => {
+  return item.type == "YTplaylist";
+};
+
+export const isVideo = (item: Item): item is YoutubeVideo => {
+  return item.type == "YTvideo";
+};
+
+export const isChannel = (item: Item): item is YoutubeChannel => {
+  return item.type == "YTchannel";
+};
+
+export const isSearch = (item: Item): item is SearchContainer => {
+  return item.type == "search";
+};
+
+export function isContainer(item: Item): item is ItemContainer {
+  return (
+    item.type == "YTchannel" ||
+    item.type == "folder" ||
+    item.type == "search" ||
+    item.type == "YTplaylist"
+  );
+}
+
+export const isNeedsToBeLoaded = (item: Item): boolean =>
+  (isPlaylist(item) && item.children.length == 0 && !item.isLoading) ||
+  (isSearch(item) && item.children.length == 0 && !item.isLoading) ||
+  (isChannel(item) && item.children.length == 0 && !item.isLoading);
+
+export const needToLoadNextPage = (item: Item): boolean =>
+  (isPlaylist(item) && !!item.nextPageToken && !item.isLoading) ||
+  (isChannel(item) && !!item.nextPageToken && !item.isLoading) ||
+  (isSearch(item) && !!item.nextPageToken && !item.isLoading);
+
+export const isLoading = (item: Item): boolean => {
+  return (
+    (isPlaylist(item) && !!item.isLoading) ||
+    (isChannel(item) && !!item.isLoading) ||
+    (isSearch(item) && !!item.isLoading)
+  );
+};
+
+export const isOpenAtSidebar = (item: Item) =>
+  isContainer(item) &&
+  (typeof item.isOpenFromSidebar != "undefined"
+    ? item.isOpenFromSidebar
+    : false);
+
+export const getItemColor = (item: Item): string => {
+  if (isFolder(item)) return colors.folderColor;
+  if (isChannel(item)) return colors.channelColor;
+  if (isPlaylist(item)) return colors.playlistColor;
+  if (isVideo(item)) return colors.videoColor;
+  return "white";
 };
 
 //Yes, I know, global dispatch and accesing it from compoents with any props nor context

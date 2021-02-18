@@ -1,6 +1,6 @@
 import React from "react";
 import { cls, colors, css, icons, utils } from "../infra";
-import { actions, RenameState } from "../items";
+import { actions, RenameState, isOpenAtSidebar, getItemColor } from "../items";
 
 const PADDING_PER_LEVEL = 15;
 const BASE_PADDING = 4;
@@ -38,7 +38,7 @@ const Row = ({
       {!isFocused &&
         icons.chevron({
           className: utils.cn({
-            [cls.rowChevronRotated]: item.isOpen,
+            [cls.rowChevronRotated]: isOpenAtSidebar(item),
             [cls.rowChevron]: true,
             [cls.rowIcon]: true,
           }),
@@ -58,6 +58,7 @@ const Row = ({
           : icons.circle({
               className: cls.rowCircle + " " + cls.rowIcon,
               "data-testid": "circle-" + item.id,
+              style: { color: getItemColor(item) },
               onClick: (e) => {
                 e.stopPropagation();
                 actions.focusItem(item);

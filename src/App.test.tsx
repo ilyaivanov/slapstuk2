@@ -3,28 +3,35 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import App from "./App";
 import { ClassName, cls, tIds } from "./infra";
 
-jest.mock("./initialItems", () => ({
-  HOME: {
-    id: "HOME",
-    title: "Home",
-    children: ["1", "2"],
-  },
-  1: {
-    id: "1",
-    title: "First",
-    children: ["1.1"],
-  },
-  2: {
-    id: "2",
-    title: "Second",
-    children: [],
-  },
-  "1.1": {
-    id: "1.1",
-    title: "First sub",
-    children: [],
-  },
-}));
+jest.mock("./initialItems", () => {
+  const initialItems: Items = {
+    HOME: {
+      id: "HOME",
+      type: "folder",
+      title: "Home",
+      children: ["1", "2"],
+    },
+    1: {
+      id: "1",
+      type: "folder",
+      title: "First",
+      children: ["1.1"],
+    },
+    2: {
+      id: "2",
+      type: "folder",
+      title: "Second",
+      children: [],
+    },
+    "1.1": {
+      id: "1.1",
+      type: "folder",
+      title: "First sub",
+      children: [],
+    },
+  };
+  return initialItems;
+});
 
 describe("Slaptuk app", () => {
   beforeEach(() => {
@@ -67,7 +74,7 @@ describe("Slaptuk app", () => {
     });
   });
 
-  describe("LOADING SUBITEMS", () => {
+  xdescribe("LOADING SUBITEMS", () => {
     describe("clicking on an item that requires loading", () => {
       beforeEach(() => fireEvent.click(getChevronForItem("2")));
 
@@ -121,7 +128,7 @@ describe("Slaptuk app", () => {
       });
     });
 
-    describe("Focusing on a second item", () => {
+    xdescribe("Focusing on a second item", () => {
       beforeEach(() => fireEvent.click(getFocusButtonForItem("2")));
 
       it("should show loading indicator", () => {
@@ -140,8 +147,6 @@ describe("Slaptuk app", () => {
       });
     });
   });
-
-  it.todo("SELECTION");
 
   describe("CHANGE SIDEBAR WIDTH AND VISIBILITY", () => {
     it("By default sidebar width is 300px", () => {

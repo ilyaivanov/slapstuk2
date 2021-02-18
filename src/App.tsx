@@ -1,6 +1,6 @@
 import React from "react";
 import ContextMenuView from "./ContextMenu";
-import { cls, colors, css, icons, tIds, utils } from "./infra";
+import { cls, colors, css, icons, tIds } from "./infra";
 import initialItems from "./initialItems";
 import * as items from "./items";
 import AppLayout from "./Layout";
@@ -147,16 +147,17 @@ type Props = {
 class RowWithChildren extends React.PureComponent<Props> {
   renderChildren = () => (
     <div data-testid={"children-" + this.props.item.id}>
-      {this.props.item.children.map((id) => (
-        <RowWithChildren
-          key={id}
-          level={this.props.level + 1}
-          item={this.props.allItems[id]}
-          allItems={this.props.allItems}
-          focusedNodeId={this.props.focusedNodeId}
-          renameState={this.props.renameState}
-        />
-      ))}
+      {items.isContainer(this.props.item) &&
+        this.props.item.children.map((id) => (
+          <RowWithChildren
+            key={id}
+            level={this.props.level + 1}
+            item={this.props.allItems[id]}
+            allItems={this.props.allItems}
+            focusedNodeId={this.props.focusedNodeId}
+            renameState={this.props.renameState}
+          />
+        ))}
     </div>
   );
 
@@ -169,10 +170,13 @@ class RowWithChildren extends React.PureComponent<Props> {
     </div>
   );
 
-  onRowClick = () => {
-    items.actions.toggleItemInSidebar(this.props.item);
-    if (this.props.item.children.length === 0 && !this.props.item.isLoading) {
-      items.actions.startLoading(this.props.item);
+  onChevronClick = () => {
+    if (items.isContainer(this.props.item)) {
+      items.actions.toggleItemInSidebar(this.props.item);
+      const { item } = this.props;
+      if (items.isNeedsToBeLoaded(item)) {
+        items.actions.startLoading(this.props.item);
+      }
     }
   };
 
@@ -183,7 +187,7 @@ class RowWithChildren extends React.PureComponent<Props> {
       isFocused={this.props.isRootItem}
       isSelected={item.id === this.props.focusedNodeId}
       renameState={this.props.renameState}
-      onClick={this.onRowClick}
+      onClick={this.onChevronClick}
     />
   );
 
@@ -192,8 +196,10 @@ class RowWithChildren extends React.PureComponent<Props> {
     return (
       <>
         {this.renderRow(item, level)}
-        {(item.isOpen || isRootItem) &&
-          (item.isLoading ? this.renderLoading() : this.renderChildren())}
+        {(items.isOpenAtSidebar(item) || isRootItem) &&
+          (items.isLoading(item)
+            ? this.renderLoading()
+            : this.renderChildren())}
       </>
     );
   }
