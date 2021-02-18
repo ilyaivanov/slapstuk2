@@ -239,6 +239,21 @@ describe("Slaptuk app", () => {
       });
     });
   });
+
+  describe("SELECTION", () => {
+    it("Clicking on a First row should select it", () => {
+      expect(getRowForItem("1")).not.toHaveClass(cls.rowSelected);
+      fireEvent.click(getRowForItem("1"));
+      expect(getRowForItem("1")).toHaveClass(cls.rowSelected);
+    });
+  });
+
+  describe("SIDEBAR HEADER ACTIONS", () => {
+    it("at Home selected creating a new node adds a new node as first child of HOME with edited node", () => {});
+  });
+
+  it.todo("load user settings from backend");
+  it.todo("use items structure from vanilla project");
 });
 
 //actions

@@ -10,6 +10,7 @@ export type RootState = {
 
 type UIOptions = {
   focusedNode: string;
+  selectedNode: string;
   leftSidebarWidth: number;
   isLeftSidebarVisible: boolean;
 };
@@ -47,7 +48,9 @@ const itemsReducer = (items: Items, action: Action): Items => {
     );
     if (parent) {
       let copy = { ...items };
-      delete copy[action.itemId];
+      //do not delete actual item, if it is focused I wan't it to still be display
+      //Althought I don't want to save selectedITem to backend which is removed
+      // delete copy[action.itemId];
       copy[parent.id] = {
         ...parent,
         children: parent.children.filter((id) => id != action.itemId),
@@ -259,6 +262,12 @@ export const actions = {
 
   assignUiOptions: (options: Partial<UIOptions>) =>
     globalDispatch({ type: "change-ui-options", options }),
+
+  selectItem: (itemId: string) =>
+    globalDispatch({
+      type: "change-ui-options",
+      options: { selectedNode: itemId },
+    }),
 
   deleteItem: (itemId: string) =>
     globalDispatch({ type: "item-delete", itemId }),

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { cls, colors, css, icons, utils } from "../infra";
 import { actions, RenameState } from "../items";
 
@@ -11,10 +11,18 @@ type RowProps = {
   item: Item;
   level: number;
   isFocused?: boolean;
+  isSelected?: boolean;
   onClick: () => void;
   renameState: RenameState | undefined;
 };
-const Row = ({ item, isFocused, level, onClick, renameState }: RowProps) => {
+const Row = ({
+  item,
+  isFocused,
+  isSelected,
+  level,
+  onClick,
+  renameState,
+}: RowProps) => {
   const isHome = item.id === "HOME";
   return (
     <div
@@ -22,8 +30,10 @@ const Row = ({ item, isFocused, level, onClick, renameState }: RowProps) => {
       className={utils.cn({
         [cls.row]: true,
         [cls.rowFocused]: isFocused,
+        [cls.rowSelected]: isSelected,
       })}
       style={{ paddingLeft: getPaddingForLevel(level) }}
+      onClick={() => actions.selectItem(item.id)}
     >
       {!isFocused &&
         icons.chevron({
@@ -99,10 +109,7 @@ const RowInputField = ({ id, name }: { id: string; name: string }) => {
       value={name}
       onKeyUp={onKeyUp}
       onChange={(e) => actions.setNewName(e.currentTarget.value)}
-      onBlur={(e) => {
-        console.log("applying renmae via blur", e);
-        actions.finishRenamingItem();
-      }}
+      onBlur={() => actions.finishRenamingItem()}
     />
   );
 };
@@ -119,8 +126,11 @@ css.hover(cls.row, {
   backgroundColor: colors.sidebarRowHover,
 });
 
+css.selector(`.${cls.row}.${cls.rowSelected}`, {
+  backgroundColor: colors.selectedRow,
+});
 css.class(cls.rowText, {
-  wordBreak: "keep-all",
+  whiteSpace: "nowrap",
 });
 
 css.class(cls.rowTitleInput, {
@@ -131,7 +141,7 @@ css.class(cls.rowTitleInput, {
 css.class(cls.rowFocused, {
   fontWeight: "bold",
   fontSize: 20,
-  marginLeft: 8,
+  paddingLeft: 8,
 });
 css.class(cls.rowIcon, {
   cursor: "pointer",
@@ -144,11 +154,13 @@ css.hover(cls.rowIcon, {
 });
 css.class(cls.unfocusArrow, {
   width: 16,
+  minWidth: 16,
   height: 16,
   marginRight: 4,
 });
 css.class(cls.rowChevron, {
   width: 13,
+  minWidth: 13,
   height: 13,
   marginLeft: 6,
 });
@@ -163,6 +175,7 @@ css.hover(cls.rowChevronRotated, {
 
 css.class(cls.rowCircle, {
   width: 9,
+  minWidth: 9,
   height: 9,
   marginRight: 6,
   marginLeft: 4,

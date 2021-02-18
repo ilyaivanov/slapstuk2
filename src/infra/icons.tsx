@@ -5,7 +5,7 @@ export type EventsDefinition = {
 };
 
 type IconProps = {
-  "data-testid": string;
+  "data-testid"?: string;
 } & React.SVGProps<SVGSVGElement>;
 
 export const chevron = (props?: IconProps) =>

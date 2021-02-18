@@ -63,6 +63,9 @@ css.class(cls.leftSidebar, {
   gridArea: "leftSidebar",
   transition: "margin-left 200ms ease-out",
   position: "relative",
+  display: "flex",
+  flexDirection: "column",
+  overflow: "hidden",
 });
 css.class(cls.player, {
   gridArea: "player",

@@ -11,6 +11,7 @@ function App() {
     items: initialItems,
     uiOptions: {
       focusedNode: "HOME",
+      selectedNode: "HOME",
       leftSidebarWidth: 300,
       isLeftSidebarVisible: true,
     },
@@ -26,7 +27,7 @@ function App() {
     <>
       <AppLayout
         state={state}
-        gallery={<div>Gallery</div>}
+        gallery={<div>{allItems[state.uiOptions.selectedNode].title}</div>}
         topbar={
           <div>
             <button
@@ -43,13 +44,22 @@ function App() {
         }
         sidebar={
           <>
-            <RowWithChildren
-              item={focusedNode}
-              allItems={allItems}
-              level={-1}
-              renameState={state.uiState.renameState}
-              isRootItem
-            />
+            <div className={cls.sidebarHeader}>
+              {icons.folderPlus({
+                className: cls.rowIcon + " " + cls.createFolderIcon,
+                // onClick:
+              })}
+            </div>
+            <div className={cls.sidebarScrollArea}>
+              <RowWithChildren
+                item={focusedNode}
+                allItems={allItems}
+                level={-1}
+                focusedNodeId={state.uiOptions.selectedNode}
+                renameState={state.uiState.renameState}
+                isRootItem
+              />
+            </div>
             <SidebarWidthAdjuster
               isMouseDown={state.uiState.isMouseDownOnAdjuster}
             />
@@ -94,6 +104,16 @@ class SidebarWidthAdjuster extends React.PureComponent<SidebarWidthAdjusterProps
   }
 }
 
+css.class(cls.createFolderIcon, {
+  height: 18,
+});
+
+css.class(cls.sidebarHeader, {
+  display: "flex",
+  justifyContent: "flex-end",
+  paddingRight: 5,
+});
+
 css.class(cls.sidebarWidthAdjuster, {
   position: "absolute",
   right: -1,
@@ -108,11 +128,18 @@ css.hover(cls.sidebarWidthAdjuster, {
   backgroundColor: colors.primary,
 });
 
+css.class(cls.sidebarScrollArea, {
+  overflowY: "auto",
+});
+
+css.text(css.styles.cssTextForScrollBar(cls.sidebarScrollArea, { width: 8 }));
+
 type Props = {
   level: number;
   item: Item;
   allItems: Items;
   renameState: items.RenameState | undefined;
+  focusedNodeId: string;
   isRootItem?: boolean;
 };
 
@@ -125,6 +152,7 @@ class RowWithChildren extends React.PureComponent<Props> {
           level={this.props.level + 1}
           item={this.props.allItems[id]}
           allItems={this.props.allItems}
+          focusedNodeId={this.props.focusedNodeId}
           renameState={this.props.renameState}
         />
       ))}
@@ -152,6 +180,7 @@ class RowWithChildren extends React.PureComponent<Props> {
       item={item}
       level={level}
       isFocused={this.props.isRootItem}
+      isSelected={item.id === this.props.focusedNodeId}
       renameState={this.props.renameState}
       onClick={this.onRowClick}
     />

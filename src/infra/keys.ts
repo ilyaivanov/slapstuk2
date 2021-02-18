@@ -11,8 +11,11 @@ const classes = {
   //Sidebar
   //Sidebar Items
   row: "",
+  rowSelected: "",
   rowText: "",
   rowIcon: "",
+  sidebarHeader: "",
+  createFolderIcon: "",
   rowChevronRotated: "",
   rowChevron: "",
   unfocusArrow: "",
@@ -24,6 +27,7 @@ const classes = {
   rowTitleInput: "",
   //Sidebar UI
   sidebarWidthAdjuster: "",
+  sidebarScrollArea: "",
   //Context Menu
   contextMenu: "",
   contextMenuRow: "",
