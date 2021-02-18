@@ -155,7 +155,7 @@ export const reducer = (state: RootState, action: RootAction): RootState => {
   if (action.type == "item-create") {
     const { selectedNode } = state.uiOptions;
     const newNode: Item = {
-      id: Math.random() + "",
+      id: action.payload,
       children: [],
       title: "New Folder",
     };
@@ -200,7 +200,7 @@ type RootAction =
   | ActionPayload<"item-set-new-name", string>
   | Action<"item-apply-rename">
   | ActionPayload<"item-delete", string>
-  | Action<"item-create">;
+  | ActionPayload<"item-create", string>;
 
 export const actions = {
   startLoading: (item: Item) => {
@@ -266,7 +266,8 @@ export const actions = {
   setNewName: (name: string) =>
     globalDispatch({ type: "item-set-new-name", payload: name }),
 
-  addNewForder: () => globalDispatch({ type: "item-create" }),
+  addNewForder: () =>
+    globalDispatch({ type: "item-create", payload: Math.random() + "" }),
 
   finishRenamingItem: () => globalDispatch({ type: "item-apply-rename" }),
 
