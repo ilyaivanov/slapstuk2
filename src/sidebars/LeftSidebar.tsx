@@ -3,39 +3,50 @@ import { cls, colors, css, icons, tIds } from "../infra";
 import * as items from "../state";
 import Row, { getPaddingForLevel } from "../sidebars/Row";
 
-const LeftSidebar = ({ state }: { state: items.RootState }) => (
-  <div
-    className={cls.leftSidebar}
-    style={{
-      width: state.uiOptions.leftSidebarWidth,
-      marginLeft: state.uiOptions.isLeftSidebarVisible
-        ? 0
-        : -state.uiOptions.leftSidebarWidth,
-    }}
-  >
-    <div className={cls.sidebarHeader}>
-      {icons.folderPlus({
-        "data-testid": "sidebarCreateFolder",
-        className: cls.icon + " " + cls.createFolderIcon,
-        onClick: () => items.actions.addNewForder(),
-      })}
-    </div>
-    <div className={cls.sidebarScrollArea}>
-      <RowWithChildren
-        item={state.items[state.uiOptions.focusedNode]}
-        allItems={state.items}
-        level={-1}
-        focusedNodeId={state.uiOptions.selectedNode}
-        renameState={state.uiState.renameState}
-        isRootItem
+type LeftSidebarProps = {
+  onResize: () => void;
+  state: items.RootState;
+};
+
+const LeftSidebar = ({ state, onResize }: LeftSidebarProps) => {
+  return (
+    <div
+      className={cls.leftSidebar}
+      style={{
+        width: state.uiOptions.leftSidebarWidth,
+        marginLeft: state.uiOptions.isLeftSidebarVisible
+          ? 0
+          : -state.uiOptions.leftSidebarWidth,
+      }}
+    >
+      <div className={cls.sidebarHeader}>
+        {icons.folderPlus({
+          "data-testid": "sidebarCreateFolder",
+          className: cls.icon + " " + cls.createFolderIcon,
+          onClick: () => items.actions.addNewForder(),
+        })}
+      </div>
+      <div className={cls.sidebarScrollArea}>
+        <RowWithChildren
+          item={state.items[state.uiOptions.focusedNode]}
+          allItems={state.items}
+          level={-1}
+          focusedNodeId={state.uiOptions.selectedNode}
+          renameState={state.uiState.renameState}
+          isRootItem
+        />
+      </div>
+      <SidebarWidthAdjuster
+        isMouseDown={state.uiState.isMouseDownOnAdjuster}
+        onResize={onResize}
       />
     </div>
-    <SidebarWidthAdjuster isMouseDown={state.uiState.isMouseDownOnAdjuster} />
-  </div>
-);
+  );
+};
 
 type SidebarWidthAdjusterProps = {
   isMouseDown: boolean;
+  onResize: () => void;
 };
 class SidebarWidthAdjuster extends React.PureComponent<SidebarWidthAdjusterProps> {
   componentDidMount() {
@@ -44,7 +55,10 @@ class SidebarWidthAdjuster extends React.PureComponent<SidebarWidthAdjusterProps
   }
 
   onMouseMove = (e: MouseEvent) => {
-    if (this.props.isMouseDown) items.actions.setSidebarWidth(e.clientX);
+    if (this.props.isMouseDown) {
+      items.actions.setSidebarWidth(e.clientX);
+      this.props.onResize();
+    }
   };
 
   onMouseUp = () =>

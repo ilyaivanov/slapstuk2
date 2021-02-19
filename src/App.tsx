@@ -24,10 +24,14 @@ function App() {
   const [state, dispatch] = React.useReducer(items.reducer, initialState);
   items.setGlobalDispatch(dispatch);
   const galleryRef = React.createRef<Gallery>();
+  const onSidebarResize = () => {
+    if (galleryRef.current) galleryRef.current.updateColumnsCount();
+  };
   useEffect(() => {
     const sidebarTransitionChange = 200;
     setTimeout(() => {
-      if (galleryRef.current) galleryRef.current.updateColumnsCount();
+      onSidebarResize();
+      //wait for animation to finish
     }, sidebarTransitionChange);
   }, [state.uiOptions.isLeftSidebarVisible]);
   return (
@@ -38,7 +42,7 @@ function App() {
           [cls.appDuringDrag]: state.uiState.isMouseDownOnAdjuster,
         })}
       >
-        <LeftSidebar state={state} />
+        <LeftSidebar state={state} onResize={onSidebarResize} />
         <div className={cls.topbar}>
           <Header
             uiOptions={state.uiOptions}
