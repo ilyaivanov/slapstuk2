@@ -2,8 +2,8 @@ import { cpuUsage } from "process";
 import React from "react";
 import { isTemplateSpan } from "typescript";
 import { cls, colors, css, icons, utils } from "../infra";
-import * as items from "../items";
-import { actions, RenameState, isOpenAtSidebar, getItemColor } from "../items";
+import * as items from "../state";
+import { actions, RenameState, isOpenAtSidebar, getItemColor } from "../state";
 
 const PADDING_PER_LEVEL = 15;
 const BASE_PADDING = 4;
@@ -102,7 +102,7 @@ const viewItemIcon = (item: Item) => {
         "data-testid": "circle-" + item.id,
         onClick: (e) => {
           e.stopPropagation();
-          actions.focusItem(item);
+          actions.focusItem(item.id);
         },
       })
     : items.isChannel(item)
@@ -111,7 +111,7 @@ const viewItemIcon = (item: Item) => {
         "data-testid": "circle-" + item.id,
         onClick: (e) => {
           e.stopPropagation();
-          actions.focusItem(item);
+          actions.focusItem(item.id);
         },
       })
     : items.isPlaylist(item)
@@ -120,7 +120,7 @@ const viewItemIcon = (item: Item) => {
         "data-testid": "circle-" + item.id,
         onClick: (e) => {
           e.stopPropagation();
-          actions.focusItem(item);
+          actions.focusItem(item.id);
         },
       })
     : icons.circle({
@@ -128,7 +128,7 @@ const viewItemIcon = (item: Item) => {
         "data-testid": "circle-" + item.id,
         onClick: (e) => {
           e.stopPropagation();
-          actions.focusItem(item);
+          actions.focusItem(item.id);
         },
       });
 };

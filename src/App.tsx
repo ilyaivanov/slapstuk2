@@ -1,15 +1,25 @@
 import React, { useEffect } from "react";
 import ContextMenuView from "./commonComponents/ContextMenu";
 import Gallery from "./gallery/Gallery";
+import Header from "./Header";
 import { tIds, css, colors, cls, utils } from "./infra";
 import initialItems from "./initialItems";
-import * as items from "./items";
+import * as items from "./state";
 import LeftSidebar from "./sidebars/LeftSidebar";
 
 function App() {
   const initialState: items.RootState = {
     ...items.initialState,
-    items: initialItems,
+    items: {
+      ...initialItems,
+      SEARCH: {
+        type: "search",
+        children: [],
+        id: "SEARCH",
+        searchTerm: "",
+        title: "Search",
+      },
+    },
   };
   const [state, dispatch] = React.useReducer(items.reducer, initialState);
   items.setGlobalDispatch(dispatch);
@@ -30,26 +40,17 @@ function App() {
       >
         <LeftSidebar state={state} />
         <div className={cls.topbar}>
-          <div>
-            <button
-              data-testid={tIds.toggleSidebar}
-              onClick={() =>
-                items.actions.assignUiOptions({
-                  isLeftSidebarVisible: !state.uiOptions.isLeftSidebarVisible,
-                })
-              }
-            >
-              left
-            </button>
-          </div>
-        </div>
-        <div className={cls.gallery}>
-          <Gallery
-            ref={galleryRef}
-            allItems={state.items}
-            nodeSelected={state.uiOptions.selectedNode}
+          <Header
+            uiOptions={state.uiOptions}
+            searchNode={state.items["SEARCH"] as SearchContainer}
           />
         </div>
+        <Gallery
+          ref={galleryRef}
+          allItems={state.items}
+          nodeSelected={state.uiOptions.selectedNode}
+        />
+
         <div className={cls.player}>Player</div>
       </div>
       <ContextMenuView options={state.uiState.contextMenu} />

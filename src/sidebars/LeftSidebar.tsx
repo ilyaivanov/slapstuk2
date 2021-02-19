@@ -1,6 +1,6 @@
 import React from "react";
 import { cls, colors, css, icons, tIds } from "../infra";
-import * as items from "../items";
+import * as items from "../state";
 import Row, { getPaddingForLevel } from "../sidebars/Row";
 
 const LeftSidebar = ({ state }: { state: items.RootState }) => (
@@ -146,7 +146,7 @@ class RowWithChildren extends React.PureComponent<Props> {
       items.actions.toggleItemInSidebar(this.props.item);
       const { item } = this.props;
       if (items.isNeedsToBeLoaded(item)) {
-        items.actions.startLoading(this.props.item);
+        items.actions.loadItem(this.props.item);
       }
     }
   };

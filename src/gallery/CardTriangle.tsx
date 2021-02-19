@@ -1,5 +1,5 @@
 import { cls, colors, css, utils } from "../infra";
-import * as items from "../items";
+import * as items from "../state";
 
 const CardTriangle = ({ item }: { item: Item }) => (
   <div

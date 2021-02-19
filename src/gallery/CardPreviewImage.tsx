@@ -1,6 +1,6 @@
 import React from "react";
 import { cls, css, utils } from "../infra";
-import * as items from "../items";
+import * as items from "../state";
 import * as c from "./constants";
 
 type CardPreviewImageProps = {

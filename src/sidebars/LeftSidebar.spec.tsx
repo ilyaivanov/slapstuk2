@@ -2,7 +2,6 @@ import React from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import App from "../App";
 import { ClassName, cls, tIds } from "../infra";
-jest.mock("../gallery/Gallery", () => () => <div>Dummy Gallery</div>);
 
 jest.mock("../initialItems", () => {
   const initialItems: Items = {

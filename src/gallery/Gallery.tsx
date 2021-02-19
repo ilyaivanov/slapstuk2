@@ -1,8 +1,11 @@
 import React from "react";
-import { cls, css, utils } from "../infra";
-import * as items from "../items";
+import LoadingSpinner from "../commonComponents/GalleryLoading";
+import { cls, colors, css, utils } from "../infra";
+import * as items from "../state";
 import Card from "./Card";
 import * as c from "./constants";
+
+const actions = items.actions;
 
 type GalleryProps = {
   allItems: Items;
@@ -42,6 +45,16 @@ class Gallery extends React.Component<GalleryProps> {
     return 0;
   };
 
+  onGalleryScroll = (e: React.MouseEvent<HTMLDivElement>) => {
+    const node = e.currentTarget as HTMLElement;
+    const item = this.props.allItems[this.props.nodeSelected];
+    const distanceFromBottom =
+      node.scrollHeight - node.scrollTop - node.offsetHeight;
+    if (distanceFromBottom < 5 && items.needToLoadNextPage(item)) {
+      actions.loadItem(item);
+    }
+  };
+
   renderGalleryColumns = () => {
     const { columnsCount } = this.state;
     //awaiting component did mount to set columns count based on gallery ref
@@ -59,23 +72,79 @@ class Gallery extends React.Component<GalleryProps> {
     ));
   };
   render() {
+    const { allItems, nodeSelected } = this.props;
+    const isLoading = items.isLoading(allItems[nodeSelected]);
+    const isLoadingNextPage = items.isLoadingNextPage(allItems[nodeSelected]);
     return (
-      <div className={cls.galleryColumnContainer} ref={this.galleryRef}>
-        {this.renderGalleryColumns()}
+      <div className={cls.gallery}>
+        <div
+          className={cls.galleryScrollArea + " " + cls.overlay}
+          onScroll={this.onGalleryScroll}
+        >
+          <div className={cls.galleryColumnContainer} ref={this.galleryRef}>
+            {isLoading && !isLoadingNextPage ? (
+              <LoadingSpinner />
+            ) : (
+              this.renderGalleryColumns()
+            )}
+          </div>
+        </div>
+        <GalleryNextPageLoader isActive={isLoadingNextPage} />
       </div>
     );
   }
 }
 
+const GalleryNextPageLoader = ({ isActive }: { isActive: boolean }) => (
+  <div
+    className={utils.cn({
+      [cls.galleyTopLoading]: true,
+      [cls.galleyTopLoadingActive]: isActive,
+    })}
+  ></div>
+);
+
+css.class(cls.galleyTopLoading, {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  backgroundColor: colors.primary,
+});
+
+css.selector(`.${cls.galleyTopLoading}.${cls.galleyTopLoadingActive}`, {
+  height: 4,
+  animation: "topLoading 2000ms infinite",
+});
+
+css.text(`
+@keyframes topLoading{
+  0%{
+    right: 100%;
+    left: 0;
+  }
+  50%{
+    right: 0;
+    left: 0;
+  }
+  100%{
+    left: 100%;
+  }
+}
+`);
+
 css.class(cls.gallery, {
+  position: "relative",
+});
+
+css.class(cls.galleryScrollArea, {
   overflowY: "overlay" as any,
 });
-css.text(css.styles.cssTextForScrollBar(cls.gallery, { width: 8 }));
+css.text(css.styles.cssTextForScrollBar(cls.galleryScrollArea, { width: 8 }));
 
 css.class(cls.galleryColumnContainer, {
   paddingTop: c.GALLERY_GAP,
   paddingRight: c.GALLERY_GAP,
-  minHeight: 1,
   display: "flex",
   flexDirection: "row",
 });

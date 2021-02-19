@@ -1,7 +1,7 @@
 import React from "react";
 import CardTriangle from "./CardTriangle";
 import { cls, colors, css, utils } from "../infra";
-import * as items from "../items";
+import * as items from "../state";
 import * as c from "./constants";
 import CardPreviewImage from "./CardPreviewImage";
 const PLAYER_HEIGHT = 40;

@@ -39,6 +39,8 @@ const classes = {
   contextMenuRow: "",
 
   //Gallery
+  galleryScrollArea: "",
+
   galleryColumnContainer: "",
   galleryColumn: "",
 
@@ -67,6 +69,10 @@ const classes = {
   subtrackFolderImage: "",
   subtrackPlaylistImage: "",
   //Utility
+  galleryLoadingContainer: "",
+  galleyTopLoading: "",
+  galleyTopLoadingActive: "",
+  loadGrid: "",
   none: "",
 };
 

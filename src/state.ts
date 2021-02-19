@@ -1,4 +1,7 @@
+import { findYoutubeVideos } from "./api/youtubeRequest";
 import { colors, utils } from "./infra";
+import * as search from "./api/search";
+import { LoadingItemsReponse } from "./api/search";
 
 export type RootState = {
   items: Items;
@@ -21,14 +24,14 @@ export const initialState: RootState = {
   },
 };
 
-type UIOptions = {
+export type UIOptions = {
   focusedNode: string;
   selectedNode: string;
   leftSidebarWidth: number;
   isLeftSidebarVisible: boolean;
 };
 
-type UIState = {
+export type UIState = {
   isMouseDownOnAdjuster: boolean;
   contextMenu?: ContextMenu;
   renameState?: RenameState;
@@ -73,19 +76,24 @@ const itemsReducer = (items: Items, action: RootAction): Items => {
     } else return items;
   }
   if (action.type == "item-loaded") {
-    const newItems = action.payload.items.reduce(
-      (ac, item) => ({ ...ac, [item.id]: item }),
-      {}
-    );
-    return {
-      ...items,
-      [action.payload.itemId]: {
-        ...items[action.payload.itemId],
-        isLoading: false,
-        children: action.payload.items.map((i) => i.id),
-      },
-      ...newItems,
-    };
+    const { payload } = action;
+    const item = items[payload.itemId];
+    if (isContainer(item)) {
+      const newItems = payload.items.reduce(
+        (ac, i) => ({ ...ac, [i.id]: i }),
+        {}
+      );
+      return {
+        ...items,
+        [item.id]: {
+          ...item,
+          isLoading: false,
+          children: item.children.concat(payload.items.map((i) => i.id)),
+          nextPageToken: payload.nextPageToken,
+        },
+        ...newItems,
+      };
+    }
   }
   return items;
 };
@@ -208,11 +216,18 @@ type ActionPlain<ActionStringType> = {
   type: ActionStringType;
 };
 
+type ItemModification<ItemType extends Item> = Partial<ItemType> & {
+  id: string;
+};
+
 type RootAction =
-  | ActionPayload<"change-item", Partial<Item> & { id: string }>
+  | ActionPayload<"change-item", ItemModification<Item>>
   | ActionPayload<"change-ui-options", Partial<UIOptions>>
   | ActionPayload<"change-ui-state", Partial<UIState>>
-  | ActionPayload<"item-loaded", { itemId: string; items: Item[] }>
+  | ActionPayload<
+      "item-loaded",
+      { itemId: string; items: Item[]; nextPageToken: string | undefined }
+    >
   | ActionPayload<"item-start-rename", string>
   | ActionPayload<"item-set-new-name", string>
   | ActionPlain<"item-apply-rename">
@@ -220,32 +235,38 @@ type RootAction =
   | ActionPayload<"item-create", string>;
 
 export const actions = {
-  startLoading: (item: Item) => {
-    setTimeout(() => {
-      const result: Item[] = utils
-        .generateNumbers(Math.round(5 + Math.random() * 5))
-        .map((num) => ({
-          id: Math.random() + "",
-          type: "folder",
-          title: "Loaded item " + num,
-          children: [],
-        }));
-      actions.finishLoading(item, result);
-    }, 2000);
-
+  assignItem: <T extends Item>(itemModification: ItemModification<T>) =>
     globalDispatch({
       type: "change-item",
-      payload: {
-        id: item.id,
-        isLoading: true,
-      },
+      payload: itemModification as any,
+    }),
+
+  searchForItems: (searchNode: SearchContainer) => {
+    actions.assignItem<SearchContainer>(searchNode);
+    actions.selectItem("SEARCH");
+    search.loadItemChildren(searchNode).then((response) => {
+      actions.finishLoading(searchNode, response);
     });
   },
 
-  finishLoading: (item: Item, subitems: Item[]) =>
+  loadItem: (item: Item) => {
+    actions.assignItem<SearchContainer>({
+      id: item.id,
+      isLoading: true,
+    });
+    search.loadItemChildren(item).then((response) => {
+      actions.finishLoading(item, response);
+    });
+  },
+
+  finishLoading: (item: Item, response: LoadingItemsReponse) =>
     globalDispatch({
       type: "item-loaded",
-      payload: { itemId: item.id, items: subitems },
+      payload: {
+        itemId: item.id,
+        items: response.items,
+        nextPageToken: response.nextPageToken,
+      },
     }),
 
   toggleItemInSidebar: (item: ItemContainer) =>
@@ -254,11 +275,11 @@ export const actions = {
       payload: { id: item.id, isOpenFromSidebar: !item.isOpenFromSidebar },
     }),
 
-  focusItem: (item: Item) => {
-    if (isContainer(item) && item.children.length == 0) {
-      actions.startLoading(item);
-    }
-    actions.assignUiOptions({ focusedNode: item.id });
+  focusItem: (itemId: string) => {
+    // if (isContainer(item) && item.children.length == 0) {
+    //   actions.startLoading(item);
+    // }
+    actions.assignUiOptions({ focusedNode: itemId });
   },
 
   unfocus: () => actions.assignUiOptions({ focusedNode: "HOME" }),
@@ -272,8 +293,12 @@ export const actions = {
   assignUiOptions: (options: Partial<UIOptions>) =>
     globalDispatch({ type: "change-ui-options", payload: options }),
 
-  selectItem: (selectedNode: string) =>
-    actions.assignUiOptions({ selectedNode }),
+  selectItem: (selectedNode: string) => {
+    // if (isNeedsToBeLoaded()) {
+    //   actions.startLoading(item);
+    // }
+    actions.assignUiOptions({ selectedNode });
+  },
 
   deleteItem: (itemId: string) =>
     globalDispatch({ type: "item-delete", payload: itemId }),
@@ -288,12 +313,6 @@ export const actions = {
     globalDispatch({ type: "item-create", payload: Math.random() + "" }),
 
   finishRenamingItem: () => globalDispatch({ type: "item-apply-rename" }),
-
-  cancelRenamingItem: () =>
-    globalDispatch({
-      type: "change-ui-state",
-      payload: { renameState: undefined },
-    }),
 };
 
 //Some behaviour on top of items
@@ -340,6 +359,13 @@ export const isLoading = (item: Item): boolean => {
     (isPlaylist(item) && !!item.isLoading) ||
     (isChannel(item) && !!item.isLoading) ||
     (isSearch(item) && !!item.isLoading)
+  );
+};
+export const isLoadingNextPage = (item: Item): boolean => {
+  return (
+    (isPlaylist(item) && !!item.isLoading && !!item.nextPageToken) ||
+    (isChannel(item) && !!item.isLoading && !!item.nextPageToken) ||
+    (isSearch(item) && !!item.isLoading && !!item.nextPageToken)
   );
 };
 

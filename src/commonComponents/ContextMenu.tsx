@@ -1,7 +1,7 @@
 import React from "react";
 import { cls, colors, css, tIds } from "../infra";
-import { actions } from "../items";
-import { ContextMenu } from "../items";
+import { actions } from "../state";
+import { ContextMenu } from "../state";
 
 type ContextMenuProps = {
   options?: ContextMenu;
