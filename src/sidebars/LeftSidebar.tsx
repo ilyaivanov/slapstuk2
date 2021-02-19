@@ -16,7 +16,7 @@ const LeftSidebar = ({ state }: { state: items.RootState }) => (
     <div className={cls.sidebarHeader}>
       {icons.folderPlus({
         "data-testid": "sidebarCreateFolder",
-        className: cls.rowIcon + " " + cls.createFolderIcon,
+        className: cls.icon + " " + cls.createFolderIcon,
         onClick: () => items.actions.addNewForder(),
       })}
     </div>
@@ -76,13 +76,13 @@ css.class(cls.leftSidebar, {
 });
 
 css.class(cls.createFolderIcon, {
-  height: 18,
+  height: 16,
 });
 
 css.class(cls.sidebarHeader, {
   display: "flex",
   justifyContent: "flex-end",
-  paddingRight: 5,
+  padding: "2px 5px",
 });
 
 css.class(cls.sidebarWidthAdjuster, {

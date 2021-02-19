@@ -14,9 +14,20 @@ class Gallery extends React.Component<GalleryProps> {
   state = {
     columnsCount: 0,
   };
+
   componentDidMount() {
-    this.setState({ columnsCount: this.getColsCount() });
+    this.updateColumnsCount();
+    window.addEventListener("resize", this.updateColumnsCount);
   }
+  componentWillUnmount() {
+    window.removeEventListener("resize", this.updateColumnsCount);
+  }
+
+  updateColumnsCount = () => {
+    const newCols = this.getColsCount();
+    if (newCols !== this.state.columnsCount)
+      this.setState({ columnsCount: newCols });
+  };
 
   getColsCount = () => {
     const galleryRef = this.galleryRef.current;

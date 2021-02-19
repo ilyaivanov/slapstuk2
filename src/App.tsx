@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ContextMenuView from "./commonComponents/ContextMenu";
 import Gallery from "./gallery/Gallery";
 import { tIds, css, colors, cls, utils } from "./infra";
@@ -13,6 +13,13 @@ function App() {
   };
   const [state, dispatch] = React.useReducer(items.reducer, initialState);
   items.setGlobalDispatch(dispatch);
+  const galleryRef = React.createRef<Gallery>();
+  useEffect(() => {
+    const sidebarTransitionChange = 200;
+    setTimeout(() => {
+      if (galleryRef.current) galleryRef.current.updateColumnsCount();
+    }, sidebarTransitionChange);
+  }, [state.uiOptions.isLeftSidebarVisible]);
   return (
     <>
       <div
@@ -38,6 +45,7 @@ function App() {
         </div>
         <div className={cls.gallery}>
           <Gallery
+            ref={galleryRef}
             allItems={state.items}
             nodeSelected={state.uiOptions.selectedNode}
           />

@@ -1,5 +1,8 @@
+import { cpuUsage } from "process";
 import React from "react";
+import { isTemplateSpan } from "typescript";
 import { cls, colors, css, icons, utils } from "../infra";
+import * as items from "../items";
 import { actions, RenameState, isOpenAtSidebar, getItemColor } from "../items";
 
 const PADDING_PER_LEVEL = 15;
@@ -40,7 +43,10 @@ const Row = ({
           className: utils.cn({
             [cls.rowChevronRotated]: isOpenAtSidebar(item),
             [cls.rowChevron]: true,
-            [cls.rowIcon]: true,
+            [cls.icon]: true,
+            [cls.iconHidden]:
+              (items.isFolder(item) && item.children.length === 0) ||
+              items.isVideo(item),
           }),
           "data-testid": "chevron-" + item.id,
           onClick: onChevronClick,
@@ -48,22 +54,14 @@ const Row = ({
       {!isHome &&
         (isFocused
           ? icons.arrow({
-              className: cls.unfocusArrow + " " + cls.rowIcon,
+              className: cls.unfocusArrow + " " + cls.icon,
               "data-testid": "unfocus-" + item.id,
               onClick: (e) => {
                 e.stopPropagation();
                 actions.unfocus();
               },
             })
-          : icons.circle({
-              className: cls.rowCircle + " " + cls.rowIcon,
-              "data-testid": "circle-" + item.id,
-              style: { color: getItemColor(item) },
-              onClick: (e) => {
-                e.stopPropagation();
-                actions.focusItem(item);
-              },
-            }))}
+          : viewItemIcon(item))}
 
       {renameState && renameState.itemBeingRenamed == item.id ? (
         <RowInputField id={item.id} name={renameState.newName} />
@@ -89,7 +87,7 @@ const Row = ({
         }}
       >
         {icons.threeDotsVertical({
-          className: cls.rowMenuIcon + " " + cls.rowIcon,
+          className: cls.rowMenuIcon + " " + cls.icon,
           "data-testid": "menu-" + item.id,
         })}
       </button>
@@ -97,6 +95,43 @@ const Row = ({
   );
 };
 
+const viewItemIcon = (item: Item) => {
+  return items.isVideo(item)
+    ? icons.play({
+        className: cls.icon + " " + cls.rowIcon + " " + cls.sidebarVideoIcon,
+        "data-testid": "circle-" + item.id,
+        onClick: (e) => {
+          e.stopPropagation();
+          actions.focusItem(item);
+        },
+      })
+    : items.isChannel(item)
+    ? icons.circle({
+        className: cls.icon + " " + cls.rowIcon + " " + cls.sidebarChannelIcon,
+        "data-testid": "circle-" + item.id,
+        onClick: (e) => {
+          e.stopPropagation();
+          actions.focusItem(item);
+        },
+      })
+    : items.isPlaylist(item)
+    ? icons.circle({
+        className: cls.icon + " " + cls.rowIcon + " " + cls.sidebarPlaylistIcon,
+        "data-testid": "circle-" + item.id,
+        onClick: (e) => {
+          e.stopPropagation();
+          actions.focusItem(item);
+        },
+      })
+    : icons.circle({
+        className: cls.icon + " " + cls.rowIcon + " " + cls.sidebarFolderIcon,
+        "data-testid": "circle-" + item.id,
+        onClick: (e) => {
+          e.stopPropagation();
+          actions.focusItem(item);
+        },
+      });
+};
 const RowInputField = ({ id, name }: { id: string; name: string }) => {
   const onKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") actions.finishRenamingItem();
@@ -144,15 +179,31 @@ css.class(cls.rowFocused, {
   fontSize: 20,
   paddingLeft: 8,
 });
-css.class(cls.rowIcon, {
+
+css.class(cls.icon, {
   cursor: "pointer",
   transition: "transform 150ms ease-in",
   color: colors.iconRegular,
 });
-css.hover(cls.rowIcon, {
+css.hover(cls.icon, {
+  transform: "scale(1.4)",
   color: colors.iconHover,
-  transform: "scale(1.2)",
 });
+css.class(cls.iconHidden, {
+  opacity: 0,
+  pointerEvents: "none",
+});
+css.active(cls.icon, {
+  transform: "scale(1.4) translate3d(0, 1px, 0)",
+});
+css.class(cls.rowIcon, {
+  width: 9,
+  minWidth: 9,
+  height: 9,
+  marginRight: 6,
+  marginLeft: 4,
+});
+
 css.class(cls.unfocusArrow, {
   width: 16,
   minWidth: 16,
@@ -174,14 +225,26 @@ css.hover(cls.rowChevronRotated, {
   transform: "scale(1.3) rotateZ(90deg)",
 });
 
-css.class(cls.rowCircle, {
-  width: 9,
-  minWidth: 9,
-  height: 9,
-  marginRight: 6,
-  marginLeft: 4,
+css.class(cls.sidebarFolderIcon, {
+  color: colors.iconRegular,
 });
 
+css.class(cls.sidebarVideoIcon, {
+  color: colors.iconRegular,
+});
+
+css.class(cls.sidebarChannelIcon, {
+  color: colors.channelColor,
+});
+css.hover(cls.sidebarChannelIcon, {
+  color: colors.channelColor,
+});
+css.class(cls.sidebarPlaylistIcon, {
+  color: colors.playlistColor,
+});
+css.hover(cls.sidebarPlaylistIcon, {
+  color: colors.playlistColor,
+});
 css.class(cls.rowMenuButton, {
   position: "absolute",
   cursor: "pointer",
