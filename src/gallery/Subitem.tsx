@@ -15,7 +15,12 @@ const Subitem = ({ item, allItems, itemIdBeingPlayed }: Props) => (
       [cls.subtrackBeingPlayed]: item.id == itemIdBeingPlayed,
     })}
     onClick={() => {
-      items.actions.playVideo(item.id);
+      if (items.isContainer(item)) {
+        const firstVideo = items.getFirstVideo(item, allItems);
+        if (firstVideo) {
+          items.actions.playVideo(firstVideo.id);
+        }
+      } else items.actions.playVideo(item.id);
     }}
   >
     <img
