@@ -6,7 +6,11 @@ import { css, colors, cls, utils } from "./infra";
 import * as items from "./state";
 import LeftSidebar from "./sidebars/LeftSidebar";
 import LoadingNineDots from "./commonComponents/LoadingNineDots";
-import { loadUserSettings, initFirebase } from "./api/firebase";
+import {
+  loadUserSettings,
+  initFirebase,
+  saveUserSettings,
+} from "./api/firebase";
 import LoginPage from "./login/LoginPage";
 import Player from "./player/Player";
 
@@ -53,6 +57,15 @@ function App() {
     }, sidebarTransitionChange);
   }, [state.uiOptions.isLeftSidebarVisible]);
 
+  const onSaveState = () => {
+    if (state.uiState.user) {
+      saveUserSettings(
+        items.createPersistedState(state),
+        state.uiState.user.id
+      );
+    }
+  };
+
   if (state.uiState.appState === "Loading") {
     return (
       <div style={{ height: "100vh", ...css.styles.flexCenter }}>
@@ -77,6 +90,7 @@ function App() {
             uiOptions={state.uiOptions}
             user={state.uiState.user}
             searchNode={state.items["SEARCH"] as SearchContainer}
+            onSaveState={onSaveState}
           />
         </div>
         <Gallery

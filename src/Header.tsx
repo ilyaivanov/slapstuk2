@@ -6,10 +6,11 @@ import { actions, UIOptions, UserInfo } from "./state";
 interface Props {
   uiOptions: UIOptions;
   searchNode: SearchContainer;
+  onSaveState: () => void;
   user?: UserInfo;
 }
 
-const Header = ({ uiOptions, searchNode, user }: Props) => {
+const Header = ({ uiOptions, searchNode, user, onSaveState }: Props) => {
   const [searchTerm, setSearchTerm] = useState("");
   return (
     <div>
@@ -44,6 +45,7 @@ const Header = ({ uiOptions, searchNode, user }: Props) => {
         search
       </button>
 
+      <button onClick={onSaveState}>save</button>
       <span>{user?.username}</span>
       <button onClick={() => logout()}>logout</button>
     </div>

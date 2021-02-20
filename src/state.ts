@@ -487,6 +487,33 @@ export const getParent = (itemId: string, allItems: Items): Item | undefined =>
     (item) => isContainer(item) && item.children.indexOf(itemId) >= 0
   );
 
+export const createPersistedState = (state: RootState): PersistedState => {
+  const homeNodes: Items = {};
+  const traverse = (id: string) => {
+    const item = state.items[id];
+    homeNodes[id] = item;
+    if (isContainer(item) && item.children.length > 0) {
+      item.children.forEach(traverse);
+    }
+  };
+  traverse("HOME");
+
+  const count = (items: Items) => Object.keys(items).length;
+  console.log(
+    `Saving to backend ${count(homeNodes)} (from ${count(state.items)})`
+  );
+
+  //selected node might be removed, in that case point to a HOME
+  const selectedItemId = homeNodes[state.uiOptions.selectedNode]
+    ? state.uiOptions.selectedNode
+    : "HOME";
+  return {
+    focusedStack: [],
+    itemsSerialized: JSON.stringify(homeNodes),
+    selectedItemId,
+  };
+};
+
 export const getPreviewImages = (
   item: Item,
   count: number,
