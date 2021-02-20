@@ -11,6 +11,7 @@ const actions = items.actions;
 type GalleryProps = {
   allItems: Items;
   nodeSelected: string;
+  itemBeingPlayed: string | undefined;
 };
 
 class Gallery extends React.Component<GalleryProps> {
@@ -67,7 +68,12 @@ class Gallery extends React.Component<GalleryProps> {
           .getChildren(this.props.nodeSelected, this.props.allItems)
           .filter((_, index) => index % columnsCount == rowNumber)
           .map((item) => (
-            <Card key={item.id} item={item} allItems={this.props.allItems} />
+            <Card
+              key={item.id}
+              item={item}
+              allItems={this.props.allItems}
+              itemIdBeingPlayed={this.props.itemBeingPlayed}
+            />
           ))}
       </div>
     ));

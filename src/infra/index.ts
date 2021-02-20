@@ -35,6 +35,10 @@ export const css = {
   tag: (tag: keyof HTMLElementTagNameMap, style: Styles) =>
     selector(tag, style),
   class: cssClass,
+  class2: (c1: string, c2: string, style: Styles) =>
+    selector(`.${c1}.${c2}`, style),
+  parentChild: (c1: string, c2: string, style: Styles) =>
+    selector(`.${c1} .${c2}`, style),
   active: cssClassOnActive,
   hover: cssClassOnHover,
   focus: (className: string, style: Styles) =>

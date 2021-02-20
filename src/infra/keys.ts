@@ -62,6 +62,7 @@ const classes = {
   emptyCardPreview: "",
   previewImageGrid: "",
   cardLoadingSpinnerContainer: "",
+  cardBeingPlayed: "",
   overlay: "",
   //Gallery Subtracks
   subtrack: "",
@@ -69,12 +70,16 @@ const classes = {
   subtrackChannelImage: "",
   subtrackFolderImage: "",
   subtrackPlaylistImage: "",
+  subtrackBeingPlayed: "",
   //Utility
   galleryLoadingContainer: "",
   loadingStripe: "",
   loadingStripeBottom: "",
   loadingStripeActive: "",
   loadGrid: "",
+
+  //Player
+  youtubePlayerHidden: "",
   none: "",
 };
 
@@ -88,6 +93,7 @@ export const cls = Object.keys(classes).reduce(
 
 export const ids = {
   root: "root",
+  youtubeIframe: "youtubeIframe",
 } as const;
 
 export const tIds = {

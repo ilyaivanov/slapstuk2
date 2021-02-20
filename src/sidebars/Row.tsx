@@ -163,7 +163,7 @@ css.hover(cls.row, {
   backgroundColor: colors.sidebarRowHover,
 });
 
-css.selector(`.${cls.row}.${cls.rowSelected}`, {
+css.class2(cls.row, cls.rowSelected, {
   backgroundColor: colors.selectedRow,
 });
 css.class(cls.rowText, {

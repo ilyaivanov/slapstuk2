@@ -43,6 +43,7 @@ export const initialState: RootState = {
 export type UIOptions = {
   focusedNode: string;
   selectedNode: string;
+  itemIdBeingPlayed?: string;
   leftSidebarWidth: number;
   isLeftSidebarVisible: boolean;
 };
@@ -85,9 +86,7 @@ const itemsReducer = (items: Items, action: RootAction): Items => {
     };
   }
   if (action.type == "item-delete") {
-    const parent: Item | undefined = Object.values(items).find(
-      (item) => isContainer(item) && item.children.indexOf(action.payload) >= 0
-    );
+    const parent = getParent(action.payload, items);
     if (parent && isContainer(parent)) {
       let copy = { ...items };
       //do not delete actual item, if it is focused I wan't it to still be display
@@ -247,6 +246,35 @@ export const reducer = (state: RootState, action: RootAction): RootState => {
       },
     };
   }
+  if (action.type === "player/playNext") {
+    const { itemIdBeingPlayed } = state.uiOptions;
+    if (itemIdBeingPlayed) {
+      const parent = getParent(itemIdBeingPlayed, state.items);
+      if (parent) {
+        const childre = getChildren(parent.id, state.items).map((i) => i.id);
+        const nextItemIndex = childre.indexOf(itemIdBeingPlayed);
+        if (nextItemIndex < childre.length - 1) {
+          const nextItemId = childre[nextItemIndex + 1];
+          return {
+            ...state,
+            uiOptions: {
+              ...state.uiOptions,
+              itemIdBeingPlayed: nextItemId,
+            },
+          };
+        }
+      }
+    }
+  }
+  if (action.type === "player/play") {
+    return {
+      ...state,
+      uiOptions: {
+        ...state.uiOptions,
+        itemIdBeingPlayed: action.payload,
+      },
+    };
+  }
   return state;
 };
 
@@ -276,7 +304,9 @@ type RootAction =
   | ActionPlain<"item-apply-rename">
   | ActionPayload<"item-delete", string>
   | ActionPayload<"item-create", string>
-  | ActionPayload<"user-state-loaded", PersistedState>;
+  | ActionPayload<"user-state-loaded", PersistedState>
+  | ActionPayload<"player/play", string>
+  | ActionPlain<"player/playNext">;
 
 export const actions = {
   assignItem: <T extends Item>(itemModification: ItemModification<T>) =>
@@ -369,6 +399,11 @@ export const actions = {
 
   userSettingsLoaded: (state: PersistedState) =>
     globalDispatch({ type: "user-state-loaded", payload: state }),
+
+  //Player
+  playVideo: (itemId: string) =>
+    globalDispatch({ type: "player/play", payload: itemId }),
+  playNextVideo: () => globalDispatch({ type: "player/playNext" }),
 };
 
 //Some behaviour on top of items
@@ -446,6 +481,11 @@ export const getChildren = (itemId: string, allItems: Items): Item[] => {
   if (isContainer(item)) return item.children.map((id) => allItems[id]);
   else return [];
 };
+
+export const getParent = (itemId: string, allItems: Items): Item | undefined =>
+  Object.values(allItems).find(
+    (item) => isContainer(item) && item.children.indexOf(itemId) >= 0
+  );
 
 export const getPreviewImages = (
   item: Item,

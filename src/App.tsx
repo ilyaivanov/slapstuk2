@@ -8,6 +8,7 @@ import LeftSidebar from "./sidebars/LeftSidebar";
 import LoadingNineDots from "./commonComponents/LoadingNineDots";
 import { loadUserSettings, initFirebase } from "./api/firebase";
 import LoginPage from "./login/LoginPage";
+import Player from "./player/Player";
 
 type FirebaseUser = {
   uid: string;
@@ -82,9 +83,13 @@ function App() {
           ref={galleryRef}
           allItems={state.items}
           nodeSelected={state.uiOptions.selectedNode}
+          itemBeingPlayed={state.uiOptions.itemIdBeingPlayed}
         />
 
-        <div className={cls.player}>Player</div>
+        <Player
+          itemId={state.uiOptions.itemIdBeingPlayed}
+          allItems={state.items}
+        />
       </div>
       <ContextMenuView options={state.uiState.contextMenu} />
     </>
