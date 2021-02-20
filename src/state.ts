@@ -1,5 +1,4 @@
-import { findYoutubeVideos } from "./api/youtubeRequest";
-import { colors, utils } from "./infra";
+import { colors } from "./infra";
 import * as search from "./api/search";
 import { LoadingItemsReponse } from "./api/search";
 
@@ -28,7 +27,7 @@ const defaultItems: Items = {
 };
 
 export const initialState: RootState = {
-  items: {},
+  items: defaultItems,
   uiOptions: {
     focusedNode: "HOME",
     selectedNode: "HOME",
@@ -53,6 +52,12 @@ export type UIState = {
   appState: GlobalAppState;
   contextMenu?: ContextMenu;
   renameState?: RenameState;
+  user?: UserInfo;
+};
+
+export type UserInfo = {
+  id: string;
+  username: string;
 };
 
 export type RenameState = {

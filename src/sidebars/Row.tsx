@@ -157,6 +157,7 @@ css.class(cls.row, {
   position: "relative",
   height: ROW_HEIGHT,
   cursor: "pointer",
+  fontWeight: 300,
 });
 css.hover(cls.row, {
   backgroundColor: colors.sidebarRowHover,

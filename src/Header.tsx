@@ -1,13 +1,15 @@
 import { useState } from "react";
+import { logout } from "./api/firebase";
 import { tIds } from "./infra";
-import { actions, UIOptions } from "./state";
+import { actions, UIOptions, UserInfo } from "./state";
 
 interface Props {
   uiOptions: UIOptions;
   searchNode: SearchContainer;
+  user?: UserInfo;
 }
 
-const Header = ({ uiOptions, searchNode }: Props) => {
+const Header = ({ uiOptions, searchNode, user }: Props) => {
   const [searchTerm, setSearchTerm] = useState("");
   return (
     <div>
@@ -41,6 +43,9 @@ const Header = ({ uiOptions, searchNode }: Props) => {
       >
         search
       </button>
+
+      <span>{user?.username}</span>
+      <button onClick={() => logout()}>logout</button>
     </div>
   );
 };

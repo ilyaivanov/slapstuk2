@@ -7,9 +7,35 @@ import * as items from "./state";
 import LeftSidebar from "./sidebars/LeftSidebar";
 import LoadingNineDots from "./commonComponents/LoadingNineDots";
 import { loadUserSettings, initFirebase } from "./api/firebase";
-import { dummyId } from "./api/firebase.config";
+import LoginPage from "./login/LoginPage";
 
-initFirebase(() => undefined);
+type FirebaseUser = {
+  uid: string;
+  displayName: string;
+  photoURL: string;
+  email: string;
+};
+
+const onAuthStateChanged = (user?: FirebaseUser) => {
+  if (user) {
+    items.actions.assignUiState({
+      user: {
+        id: user.uid,
+        username: user.displayName,
+      },
+    });
+    loadUserSettings(user.uid).then((res) => {
+      items.actions.userSettingsLoaded(res);
+    });
+  } else {
+    items.actions.assignUiState({
+      user: undefined,
+      appState: "Loaded",
+    });
+  }
+};
+
+initFirebase(onAuthStateChanged);
 
 function App() {
   const [state, dispatch] = React.useReducer(items.reducer, items.initialState);
@@ -26,12 +52,6 @@ function App() {
     }, sidebarTransitionChange);
   }, [state.uiOptions.isLeftSidebarVisible]);
 
-  useEffect(() => {
-    loadUserSettings(dummyId).then((res) =>
-      items.actions.userSettingsLoaded(res)
-    );
-  }, []);
-
   if (state.uiState.appState === "Loading") {
     return (
       <div style={{ height: "100vh", ...css.styles.flexCenter }}>
@@ -39,7 +59,9 @@ function App() {
       </div>
     );
   }
-
+  if (!state.uiState.user) {
+    return <LoginPage />;
+  }
   return (
     <>
       <div
@@ -52,6 +74,7 @@ function App() {
         <div className={cls.topbar}>
           <Header
             uiOptions={state.uiOptions}
+            user={state.uiState.user}
             searchNode={state.items["SEARCH"] as SearchContainer}
           />
         </div>
