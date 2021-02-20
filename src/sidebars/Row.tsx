@@ -176,8 +176,8 @@ css.class(cls.rowTitleInput, {
   border: "none",
 });
 css.class(cls.rowFocused, {
-  fontWeight: "bold",
-  fontSize: 20,
+  fontWeight: 400,
+  fontSize: 22,
   paddingLeft: 8,
 });
 
