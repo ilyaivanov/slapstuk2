@@ -11,6 +11,22 @@ export type RootState = {
   uiState: UIState;
 };
 
+const defaultItems: Items = {
+  HOME: {
+    type: "folder",
+    children: [],
+    id: "HOME",
+    title: "Home",
+  },
+  SEARCH: {
+    type: "search",
+    searchTerm: "",
+    children: [],
+    id: "SEARCH",
+    title: "Search",
+  },
+};
+
 export const initialState: RootState = {
   items: {},
   uiOptions: {
@@ -21,6 +37,7 @@ export const initialState: RootState = {
   },
   uiState: {
     isMouseDownOnAdjuster: false,
+    appState: "Loading",
   },
 };
 
@@ -33,6 +50,7 @@ export type UIOptions = {
 
 export type UIState = {
   isMouseDownOnAdjuster: boolean;
+  appState: GlobalAppState;
   contextMenu?: ContextMenu;
   renameState?: RenameState;
 };
@@ -47,6 +65,8 @@ export type ContextMenu = {
   y: number;
   itemId: string;
 };
+
+export type GlobalAppState = "Loading" | "Loaded";
 
 const itemsReducer = (items: Items, action: RootAction): Items => {
   if (action.type == "change-item") {
@@ -204,6 +224,24 @@ export const reducer = (state: RootState, action: RootAction): RootState => {
       };
     }
   }
+
+  if (action.type === "user-state-loaded") {
+    const { payload } = action;
+    const items = payload ? JSON.parse(payload.itemsSerialized) : defaultItems;
+    const selectedNode = payload ? payload.selectedItemId : "HOME";
+    return {
+      ...state,
+      items,
+      uiOptions: {
+        ...state.uiOptions,
+        selectedNode,
+      },
+      uiState: {
+        ...state.uiState,
+        appState: "Loaded",
+      },
+    };
+  }
   return state;
 };
 
@@ -232,7 +270,8 @@ type RootAction =
   | ActionPayload<"item-set-new-name", string>
   | ActionPlain<"item-apply-rename">
   | ActionPayload<"item-delete", string>
-  | ActionPayload<"item-create", string>;
+  | ActionPayload<"item-create", string>
+  | ActionPayload<"user-state-loaded", PersistedState>;
 
 export const actions = {
   assignItem: <T extends Item>(itemModification: ItemModification<T>) =>
@@ -322,6 +361,9 @@ export const actions = {
     globalDispatch({ type: "item-create", payload: Math.random() + "" }),
 
   finishRenamingItem: () => globalDispatch({ type: "item-apply-rename" }),
+
+  userSettingsLoaded: (state: PersistedState) =>
+    globalDispatch({ type: "user-state-loaded", payload: state }),
 };
 
 //Some behaviour on top of items

@@ -2,26 +2,17 @@ import React, { useEffect } from "react";
 import ContextMenuView from "./commonComponents/ContextMenu";
 import Gallery from "./gallery/Gallery";
 import Header from "./Header";
-import { tIds, css, colors, cls, utils } from "./infra";
-import initialItems from "./initialItems";
+import { css, colors, cls, utils } from "./infra";
 import * as items from "./state";
 import LeftSidebar from "./sidebars/LeftSidebar";
+import LoadingNineDots from "./commonComponents/LoadingNineDots";
+import { loadUserSettings, initFirebase } from "./api/firebase";
+import { dummyId } from "./api/firebase.config";
+
+initFirebase(() => undefined);
 
 function App() {
-  const initialState: items.RootState = {
-    ...items.initialState,
-    items: {
-      ...initialItems,
-      SEARCH: {
-        type: "search",
-        children: [],
-        id: "SEARCH",
-        searchTerm: "",
-        title: "Search",
-      },
-    },
-  };
-  const [state, dispatch] = React.useReducer(items.reducer, initialState);
+  const [state, dispatch] = React.useReducer(items.reducer, items.initialState);
   items.setGlobalDispatch(dispatch);
   const galleryRef = React.createRef<Gallery>();
   const onSidebarResize = () => {
@@ -34,6 +25,21 @@ function App() {
       //wait for animation to finish
     }, sidebarTransitionChange);
   }, [state.uiOptions.isLeftSidebarVisible]);
+
+  useEffect(() => {
+    loadUserSettings(dummyId).then((res) =>
+      items.actions.userSettingsLoaded(res)
+    );
+  }, []);
+
+  if (state.uiState.appState === "Loading") {
+    return (
+      <div style={{ height: "100vh", ...css.styles.flexCenter }}>
+        <LoadingNineDots />
+      </div>
+    );
+  }
+
   return (
     <>
       <div

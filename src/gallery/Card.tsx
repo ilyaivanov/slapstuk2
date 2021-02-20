@@ -4,7 +4,7 @@ import { cls, colors, css, utils } from "../infra";
 import * as items from "../state";
 import * as c from "./constants";
 import CardPreviewImage from "./CardPreviewImage";
-import LoadingSpinner from "../commonComponents/GalleryLoading";
+import LoadingNineDots from "../commonComponents/LoadingNineDots";
 import LoadingStripe from "../commonComponents/LoadingStripe";
 const PLAYER_HEIGHT = 40;
 const Card = ({ item, allItems }: { item: Item; allItems: Items }) => {
@@ -46,7 +46,7 @@ const Card = ({ item, allItems }: { item: Item; allItems: Items }) => {
         {items.isOpenAtGallery(item) &&
           (isEmptyAndLoading() ? (
             <div className={cls.cardLoadingSpinnerContainer}>
-              <LoadingSpinner />
+              <LoadingNineDots />
             </div>
           ) : (
             items

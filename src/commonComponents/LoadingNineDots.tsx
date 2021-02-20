@@ -1,6 +1,6 @@
 import { cls, css, utils } from "../infra";
 
-const LoadingSpinner = () => (
+const LoadingNineDots = () => (
   <div className={cls.galleryLoadingContainer}>
     <div className={cls.loadGrid}>
       {utils.generateNumbers(9).map((i) => (
@@ -10,7 +10,7 @@ const LoadingSpinner = () => (
   </div>
 );
 
-export default LoadingSpinner;
+export default LoadingNineDots;
 
 css.class(cls.galleryLoadingContainer, {
   width: "100%",

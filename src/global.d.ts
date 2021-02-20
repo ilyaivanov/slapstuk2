@@ -58,3 +58,12 @@ type YoutubeVideo = {
   type: "YTvideo";
   videoId: string;
 } & CommonItemProperties;
+
+type PersistedState = {
+  selectedItemId: string;
+  focusedStack: string[];
+  itemsSerialized: string;
+  ui?: {
+    leftSidebarWidth: number;
+  };
+};

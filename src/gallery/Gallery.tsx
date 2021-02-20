@@ -1,5 +1,5 @@
 import React from "react";
-import LoadingSpinner from "../commonComponents/GalleryLoading";
+import LoadingNineDots from "../commonComponents/LoadingNineDots";
 import LoadingStripe from "../commonComponents/LoadingStripe";
 import { cls, colors, css, utils } from "../infra";
 import * as items from "../state";
@@ -84,7 +84,7 @@ class Gallery extends React.Component<GalleryProps> {
         >
           <div className={cls.galleryColumnContainer} ref={this.galleryRef}>
             {isLoading && !isLoadingNextPage ? (
-              <LoadingSpinner />
+              <LoadingNineDots />
             ) : (
               this.renderGalleryColumns()
             )}
