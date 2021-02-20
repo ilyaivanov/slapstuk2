@@ -275,6 +275,15 @@ export const actions = {
       payload: { id: item.id, isOpenFromSidebar: !item.isOpenFromSidebar },
     }),
 
+  toggleItemInGallery: (item: ItemContainer) =>
+    globalDispatch({
+      type: "change-item",
+      payload: {
+        id: item.id,
+        isCollapsedInGallery: !item.isCollapsedInGallery,
+      },
+    }),
+
   focusItem: (itemId: string) => {
     // if (isContainer(item) && item.children.length == 0) {
     //   actions.startLoading(item);
@@ -349,12 +358,12 @@ export const isNeedsToBeLoaded = (item: Item): boolean =>
   (isSearch(item) && item.children.length == 0 && !item.isLoading) ||
   (isChannel(item) && item.children.length == 0 && !item.isLoading);
 
-export const needToLoadNextPage = (item: Item): boolean =>
+export const hasNextPage = (item: Item): boolean =>
   (isPlaylist(item) && !!item.nextPageToken && !item.isLoading) ||
   (isChannel(item) && !!item.nextPageToken && !item.isLoading) ||
   (isSearch(item) && !!item.nextPageToken && !item.isLoading);
 
-export const isLoading = (item: Item): boolean => {
+export const isLoadingAnything = (item: Item): boolean => {
   return (
     (isPlaylist(item) && !!item.isLoading) ||
     (isChannel(item) && !!item.isLoading) ||

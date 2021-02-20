@@ -1,5 +1,6 @@
 import React from "react";
 import LoadingSpinner from "../commonComponents/GalleryLoading";
+import LoadingStripe from "../commonComponents/LoadingStripe";
 import { cls, colors, css, utils } from "../infra";
 import * as items from "../state";
 import Card from "./Card";
@@ -46,11 +47,11 @@ class Gallery extends React.Component<GalleryProps> {
   };
 
   onGalleryScroll = (e: React.MouseEvent<HTMLDivElement>) => {
-    const node = e.currentTarget as HTMLElement;
     const item = this.props.allItems[this.props.nodeSelected];
-    const distanceFromBottom =
-      node.scrollHeight - node.scrollTop - node.offsetHeight;
-    if (distanceFromBottom < 5 && items.needToLoadNextPage(item)) {
+    if (
+      utils.getScrollDistanceFromBottom(e.currentTarget) < 5 &&
+      items.hasNextPage(item)
+    ) {
       actions.loadItem(item);
     }
   };
@@ -73,7 +74,7 @@ class Gallery extends React.Component<GalleryProps> {
   };
   render() {
     const { allItems, nodeSelected } = this.props;
-    const isLoading = items.isLoading(allItems[nodeSelected]);
+    const isLoading = items.isLoadingAnything(allItems[nodeSelected]);
     const isLoadingNextPage = items.isLoadingNextPage(allItems[nodeSelected]);
     return (
       <div className={cls.gallery}>
@@ -89,49 +90,11 @@ class Gallery extends React.Component<GalleryProps> {
             )}
           </div>
         </div>
-        <GalleryNextPageLoader isActive={isLoadingNextPage} />
+        <LoadingStripe isActive={isLoadingNextPage} />
       </div>
     );
   }
 }
-
-const GalleryNextPageLoader = ({ isActive }: { isActive: boolean }) => (
-  <div
-    className={utils.cn({
-      [cls.galleyTopLoading]: true,
-      [cls.galleyTopLoadingActive]: isActive,
-    })}
-  ></div>
-);
-
-css.class(cls.galleyTopLoading, {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  backgroundColor: colors.primary,
-});
-
-css.selector(`.${cls.galleyTopLoading}.${cls.galleyTopLoadingActive}`, {
-  height: 4,
-  animation: "topLoading 2000ms infinite",
-});
-
-css.text(`
-@keyframes topLoading{
-  0%{
-    right: 100%;
-    left: 0;
-  }
-  50%{
-    right: 0;
-    left: 0;
-  }
-  100%{
-    left: 100%;
-  }
-}
-`);
 
 css.class(cls.gallery, {
   position: "relative",

@@ -182,7 +182,7 @@ class RowWithChildren extends React.PureComponent<Props> {
       <>
         {this.renderRow(item, level)}
         {(items.isOpenAtSidebar(item) || isRootItem) &&
-          (items.isLoading(item)
+          (items.isLoadingAnything(item)
             ? this.renderLoading()
             : this.renderChildren())}
       </>

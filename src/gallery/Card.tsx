@@ -4,31 +4,64 @@ import { cls, colors, css, utils } from "../infra";
 import * as items from "../state";
 import * as c from "./constants";
 import CardPreviewImage from "./CardPreviewImage";
+import LoadingSpinner from "../commonComponents/GalleryLoading";
+import LoadingStripe from "../commonComponents/LoadingStripe";
 const PLAYER_HEIGHT = 40;
-const Card = ({ item, allItems }: { item: Item; allItems: Items }) => (
-  <div className={cls.card}>
-    <div className={cls.cardImageWithTextContainer}>
-      <CardPreviewImage item={item} allItems={allItems} />
+const Card = ({ item, allItems }: { item: Item; allItems: Items }) => {
+  const onSubtracksScroll = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (
+      utils.getScrollDistanceFromBottom(e.currentTarget) < 5 &&
+      items.hasNextPage(item)
+    ) {
+      items.actions.loadItem(item);
+    }
+  };
+  const isEmptyAndLoading = () =>
+    items.isLoadingAnything(item) &&
+    items.getChildren(item.id, allItems).length == 0;
+
+  return (
+    <div className={cls.card}>
       <div
-        className={utils.cn({
-          [cls.cardText]: true,
-          [cls.cardTextForFolder]: items.isContainer(item),
-        })}
+        className={cls.cardImageWithTextContainer}
+        onClick={() => {
+          if (items.isContainer(item)) {
+            if (items.isNeedsToBeLoaded(item)) items.actions.loadItem(item);
+            items.actions.toggleItemInGallery(item);
+          }
+          //else: play video
+        }}
       >
-        {item.title}
+        <CardPreviewImage item={item} allItems={allItems} />
+        <div
+          className={utils.cn({
+            [cls.cardText]: true,
+            [cls.cardTextForFolder]: items.isContainer(item),
+          })}
+        >
+          {item.title}
+        </div>
       </div>
-    </div>
-    <div className={cls.subtracksContainer}>
-      {items.isOpenAtGallery(item) &&
-        items
-          .getChildren(item.id, allItems)
-          .map((item) => (
-            <SubTrack key={item.id} item={item} allItems={allItems} />
+      <div className={cls.subtracksContainer} onScroll={onSubtracksScroll}>
+        {items.isOpenAtGallery(item) &&
+          (isEmptyAndLoading() ? (
+            <div className={cls.cardLoadingSpinnerContainer}>
+              <LoadingSpinner />
+            </div>
+          ) : (
+            items
+              .getChildren(item.id, allItems)
+              .map((item) => (
+                <SubTrack key={item.id} item={item} allItems={allItems} />
+              ))
           ))}
+        {items.isLoadingNextPage(item) && <LoadingStripe isActive isBottom />}
+      </div>
+
+      <CardTriangle item={item} />
     </div>
-    <CardTriangle item={item} />
-  </div>
-);
+  );
+};
 
 export default Card;
 
@@ -140,35 +173,6 @@ css.class(cls.subtrackFolderImage, {
   border: `1px solid ${colors.folderColor}`,
 });
 
-// css.class(cls.cardImage, {
-//   display: "block",
-//   opacity: "1",
-//   transition: `
-//       margin-top ${cardExpandCollapseSpeed}ms linear,
-//       height ${cardExpandCollapseSpeed}ms linear,
-//       opacity ${cardExpandCollapseSpeed}ms ease-out`,
-//   width: `100%`,
-//   objectFit: "cover",
-// });
-
-// css.class(cls.folderImages, {
-//   display: "flex",
-//   flexDirection: "row",
-// });
-
-// css.class(cls.folderImagesSubContanier, {
-//   flex: 1,
-// });
-
-// css.selector(`.${cls.folderImages} img`, {
-//   width: "100%",
-//   // height: "100%",
-//   // maxHeight: "50%",
-//   display: "block",
-// });
-
-// css.class(cls.folderImagesEmpty, {
-//   color: "gray",
-//   fontSize: 40,
-//   ...styles.flexCenter,
-// });
+css.class(cls.cardLoadingSpinnerContainer, {
+  paddingBottom: 10,
+});

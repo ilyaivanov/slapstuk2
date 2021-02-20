@@ -56,3 +56,6 @@ export const cn = (classDefinitions: {
   Object.keys(classDefinitions)
     .filter((key) => !!classDefinitions[key])
     .join(" ");
+
+export const getScrollDistanceFromBottom = (element: HTMLElement) =>
+  element.scrollHeight - element.scrollTop - element.offsetHeight;

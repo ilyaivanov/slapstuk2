@@ -61,6 +61,7 @@ const classes = {
   previewImage: "",
   emptyCardPreview: "",
   previewImageGrid: "",
+  cardLoadingSpinnerContainer: "",
   overlay: "",
   //Gallery Subtracks
   subtrack: "",
@@ -70,8 +71,9 @@ const classes = {
   subtrackPlaylistImage: "",
   //Utility
   galleryLoadingContainer: "",
-  galleyTopLoading: "",
-  galleyTopLoadingActive: "",
+  loadingStripe: "",
+  loadingStripeBottom: "",
+  loadingStripeActive: "",
   loadGrid: "",
   none: "",
 };
