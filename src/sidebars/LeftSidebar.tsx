@@ -1,5 +1,5 @@
 import React from "react";
-import { cls, colors, css, icons, tIds } from "../infra";
+import { cls, colors, css, icons, tIds, utils } from "../infra";
 import * as items from "../state";
 import Row, { getPaddingForLevel } from "../sidebars/Row";
 
@@ -44,6 +44,7 @@ const LeftSidebar = ({ state, onResize }: LeftSidebarProps) => {
   );
 };
 
+const ADJUSTER_WIDTH = 4;
 type SidebarWidthAdjusterProps = {
   isMouseDown: boolean;
   onResize: () => void;
@@ -56,7 +57,7 @@ class SidebarWidthAdjuster extends React.PureComponent<SidebarWidthAdjusterProps
 
   onMouseMove = (e: MouseEvent) => {
     if (this.props.isMouseDown) {
-      items.actions.setSidebarWidth(e.clientX);
+      items.actions.setSidebarWidth(e.clientX + ADJUSTER_WIDTH / 2);
       this.props.onResize();
     }
   };
@@ -71,11 +72,28 @@ class SidebarWidthAdjuster extends React.PureComponent<SidebarWidthAdjusterProps
       isMouseDownOnAdjuster: true,
     });
 
+  onDoubleClick = () => {
+    const texts = document.getElementsByClassName(cls.rowText);
+    const maxWidth = utils.max(
+      Array.from(texts).map((r) => {
+        const rect = r.getBoundingClientRect();
+        return rect.x + rect.width;
+      })
+    );
+    if (maxWidth) items.actions.setSidebarWidth(maxWidth + 10);
+  };
+
   render() {
     return (
       <div
-        className={cls.sidebarWidthAdjuster}
+        title="Double click to auto-adjust"
+        className={
+          cls.sidebarWidthAdjuster +
+          " " +
+          (this.props.isMouseDown ? cls.sidebarWidthAdjusterActive : "")
+        }
         onMouseDown={this.onMouseDown}
+        onDoubleClick={this.onDoubleClick}
       />
     );
   }
@@ -102,14 +120,17 @@ css.class(cls.sidebarHeader, {
 css.class(cls.sidebarWidthAdjuster, {
   position: "absolute",
   right: -1,
-  width: 3,
+  width: ADJUSTER_WIDTH,
   top: 0,
   bottom: 0,
   cursor: "col-resize",
-  transition: "background-color 200ms ease-out",
+  transition: "background-color 200ms ease-out 100ms",
 });
 
 css.hover(cls.sidebarWidthAdjuster, {
+  backgroundColor: colors.primary,
+});
+css.class(cls.sidebarWidthAdjusterActive, {
   backgroundColor: colors.primary,
 });
 

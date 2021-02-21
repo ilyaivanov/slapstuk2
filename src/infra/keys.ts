@@ -33,6 +33,7 @@ const classes = {
   rowTitleInput: "",
   //Sidebar UI
   sidebarWidthAdjuster: "",
+  sidebarWidthAdjusterActive: "",
   sidebarScrollArea: "",
   //Context Menu
   contextMenu: "",
