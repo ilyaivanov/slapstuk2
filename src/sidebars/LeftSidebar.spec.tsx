@@ -168,7 +168,7 @@ describe("Slaptuk sidebar", () => {
       fireEvent.mouseDown(getByClass(cls.sidebarWidthAdjuster));
       fireEvent.mouseMove(document, { clientX: 305 });
       fireEvent.mouseUp(document);
-      expect(getSidebar()).toHaveStyle("width: 305px");
+      expect(getSidebar()).toHaveStyle("width: 307px");
     });
     it("left sidebar left margin should be zero", () => {
       expect(getSidebar()).toHaveStyle("margin-left: 0px");
