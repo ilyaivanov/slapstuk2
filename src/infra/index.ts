@@ -39,6 +39,8 @@ export const css = {
     selector(`.${c1}.${c2}`, style),
   parentChild: (c1: string, c2: string, style: Styles) =>
     selector(`.${c1} .${c2}`, style),
+  onParentHover: (c1: string, c2: string, style: Styles) =>
+    selector(`.${c1}:hover .${c2}`, style),
   active: cssClassOnActive,
   hover: cssClassOnHover,
   focus: (className: string, style: Styles) =>

@@ -184,7 +184,7 @@ css.class(cls.row, {
   position: "relative",
   height: ROW_HEIGHT,
   cursor: "pointer",
-  fontWeight: 300,
+  // fontWeight: 300,
 });
 css.hover(cls.row, {
   backgroundColor: colors.sidebarRowHover,
@@ -252,6 +252,12 @@ css.class(cls.rowChevron, {
   minWidth: 13,
   height: 13,
   marginLeft: 6,
+  transition: "opacity 400ms ease-out",
+  opacity: 0,
+});
+
+css.onParentHover(cls.leftSidebar, cls.rowChevron, {
+  opacity: 1,
 });
 
 css.class(cls.rowChevronRotated, {
