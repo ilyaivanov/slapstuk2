@@ -47,6 +47,7 @@ class DragAvatar extends React.Component<DndListenerProps> {
     const { state } = this.props;
     const { dragState } = state;
     if (!dragState) return;
+
     if (dragState.type == "mouseDownNoDrag") {
       const currentPosition: Point = { x: e.clientX, y: e.clientY };
       const distanceTraveledFromMouseDown = distance(
@@ -99,7 +100,7 @@ class DragAvatar extends React.Component<DndListenerProps> {
   ) => {
     const arrow =
       dragDestination.itemPosition == "inside"
-        ? "↘"
+        ? "⤷"
         : dragDestination.itemPosition == "before"
         ? "↑"
         : "↓";

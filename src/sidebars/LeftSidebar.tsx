@@ -82,7 +82,11 @@ class SidebarWidthAdjuster extends React.PureComponent<SidebarWidthAdjusterProps
         return rect.x + rect.width;
       })
     );
-    if (maxWidth) items.actions.setSidebarWidth(maxWidth + 10);
+    if (maxWidth) {
+      items.actions.setSidebarWidth(maxWidth + 10);
+      //ugly, but I'm going to change how sidebar behaves in any way
+      setTimeout(() => this.props.onResize(), 10);
+    }
   };
 
   render() {

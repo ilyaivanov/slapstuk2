@@ -40,10 +40,7 @@ const Row = ({
       style={{ paddingLeft: getPaddingForLevel(level) }}
       onClick={() => actions.selectItem(item.id)}
       onMouseDown={(e) =>
-        actions.mouseDownOnItem(item.id, {
-          x: e.screenX,
-          y: e.screenY,
-        })
+        actions.mouseDownOnItem(item.id, { x: e.clientX, y: e.clientY })
       }
       onMouseMove={
         dragState && dragState.type == "draggingItem"
