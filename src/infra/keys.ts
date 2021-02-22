@@ -7,7 +7,8 @@ const classes = {
   gallery: "",
   player: "",
   //Layout Utility
-  appDuringDrag: "",
+  appDuringSidebarAdjust: "",
+  appDuringItemDrag: "",
   //Sidebar
   //Sidebar Items
   row: "",
@@ -81,6 +82,11 @@ const classes = {
 
   //Player
   youtubePlayerHidden: "",
+
+  //Drag and Drop
+  dragAvatar: "",
+  dragDesignation: "",
+
   none: "",
 };
 
@@ -106,6 +112,8 @@ export const tIds = {
   contextMenuDelete: "contextMenuDelete",
 };
 
-export const zIndexes = {};
+export const zIndexes = {
+  dragAvatar: 200,
+};
 
 export type ClassName = string;

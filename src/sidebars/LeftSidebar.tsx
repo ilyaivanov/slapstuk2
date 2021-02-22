@@ -18,6 +18,7 @@ const LeftSidebar = ({ state, onResize }: LeftSidebarProps) => {
           ? 0
           : -state.uiOptions.leftSidebarWidth,
       }}
+      onMouseLeave={() => items.actions.removeDestination()}
     >
       <div className={cls.sidebarHeader}>
         {icons.folderPlus({
@@ -34,6 +35,7 @@ const LeftSidebar = ({ state, onResize }: LeftSidebarProps) => {
           focusedNodeId={state.uiOptions.selectedNode}
           renameState={state.uiState.renameState}
           isRootItem
+          dragState={state.dragState}
         />
       </div>
       <SidebarWidthAdjuster
@@ -147,6 +149,7 @@ type Props = {
   renameState: items.RenameState | undefined;
   focusedNodeId: string;
   isRootItem?: boolean;
+  dragState: items.DragState | undefined;
 };
 
 class RowWithChildren extends React.PureComponent<Props> {
@@ -161,6 +164,7 @@ class RowWithChildren extends React.PureComponent<Props> {
             allItems={this.props.allItems}
             focusedNodeId={this.props.focusedNodeId}
             renameState={this.props.renameState}
+            dragState={this.props.dragState}
           />
         ))}
     </div>
@@ -194,6 +198,7 @@ class RowWithChildren extends React.PureComponent<Props> {
       isSelected={item.id === this.props.focusedNodeId}
       renameState={this.props.renameState}
       onChevronClick={this.onChevronClick}
+      dragState={this.props.dragState}
     />
   );
 

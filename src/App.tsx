@@ -13,6 +13,7 @@ import {
 } from "./api/firebase";
 import LoginPage from "./login/LoginPage";
 import Player from "./player/Player";
+import DragAvatar from "./dragAndDrop/DragAvatar";
 
 type FirebaseUser = {
   uid: string;
@@ -81,8 +82,16 @@ function App() {
       <div
         className={utils.cn({
           [cls.app]: true,
-          [cls.appDuringDrag]: state.uiState.isMouseDownOnAdjuster,
+          [cls.appDuringItemDrag]:
+            state.dragState && state.dragState.type == "draggingItem",
+          [cls.appDuringSidebarAdjust]: state.uiState.isMouseDownOnAdjuster,
         })}
+        style={{
+          cursor:
+            state.dragState && state.dragState.type == "draggingItem"
+              ? "grabbing"
+              : undefined,
+        }}
       >
         <LeftSidebar state={state} onResize={onSidebarResize} />
         <div className={cls.topbar}>
@@ -106,6 +115,7 @@ function App() {
         />
       </div>
       <ContextMenuView options={state.uiState.contextMenu} />
+      <DragAvatar state={state} />
     </>
   );
 }
@@ -114,8 +124,11 @@ css.tag("body", {
   backgroundColor: colors.menu,
   color: colors.textRegular,
 });
-css.class(cls.appDuringDrag, {
+css.class(cls.appDuringSidebarAdjust, {
   userSelect: "none",
+});
+css.class(cls.appDuringItemDrag, {
+  cursor: "grabbing",
 });
 css.class(cls.app, {
   height: "100vh",

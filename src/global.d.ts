@@ -1,5 +1,10 @@
 type valueof<T> = T[keyof T];
 
+type Point = {
+  x: number;
+  y: number;
+};
+
 type Items = { [id: string]: Item };
 
 type Item = ItemContainer | YoutubeVideo;

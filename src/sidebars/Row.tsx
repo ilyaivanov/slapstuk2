@@ -1,12 +1,11 @@
-import { cpuUsage } from "process";
 import React from "react";
-import { isTemplateSpan } from "typescript";
 import { cls, colors, css, icons, utils } from "../infra";
 import * as items from "../state";
-import { actions, RenameState, isOpenAtSidebar, getItemColor } from "../state";
+import { actions, RenameState, isOpenAtSidebar } from "../state";
 
-const PADDING_PER_LEVEL = 15;
+export const PADDING_PER_LEVEL = 15;
 const BASE_PADDING = 4;
+
 export const getPaddingForLevel = (level: number) =>
   BASE_PADDING + level * PADDING_PER_LEVEL;
 
@@ -15,9 +14,11 @@ type RowProps = {
   level: number;
   isFocused?: boolean;
   isSelected?: boolean;
+  dragState: items.DragState | undefined;
   onChevronClick: (e: React.MouseEvent<SVGSVGElement>) => void;
   renameState: RenameState | undefined;
 };
+
 const Row = ({
   item,
   isFocused,
@@ -25,6 +26,7 @@ const Row = ({
   level,
   onChevronClick,
   renameState,
+  dragState,
 }: RowProps) => {
   const isHome = item.id === "HOME";
   return (
@@ -37,6 +39,33 @@ const Row = ({
       })}
       style={{ paddingLeft: getPaddingForLevel(level) }}
       onClick={() => actions.selectItem(item.id)}
+      onMouseDown={(e) =>
+        actions.mouseDownOnItem(item.id, {
+          x: e.screenX,
+          y: e.screenY,
+        })
+      }
+      onMouseMove={
+        dragState && dragState.type == "draggingItem"
+          ? (e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const isOnTheSecondHalf = e.clientY >= rect.top + rect.height / 2;
+              const itemInsideBoundary = 32 + level * PADDING_PER_LEVEL;
+              const isInside = e.clientX > itemInsideBoundary;
+              actions.setDragDestination({
+                itemPosition:
+                  isInside && isOnTheSecondHalf
+                    ? "inside"
+                    : isOnTheSecondHalf
+                    ? "after"
+                    : "before",
+                itemUnderId: item.id,
+                itemUnderRect: rect,
+                itemUnderLevel: level,
+              });
+            }
+          : undefined
+      }
     >
       {!isFocused &&
         icons.chevron({
@@ -152,6 +181,7 @@ const RowInputField = ({ id, name }: { id: string; name: string }) => {
 
 const ROW_HEIGHT = 27;
 css.class(cls.row, {
+  userSelect: "none",
   display: "flex",
   alignItems: "center",
   position: "relative",
@@ -161,6 +191,11 @@ css.class(cls.row, {
 });
 css.hover(cls.row, {
   backgroundColor: colors.sidebarRowHover,
+});
+
+css.parentChild(cls.appDuringItemDrag, cls.row, {
+  backgroundColor: "transparent",
+  cursor: "inherit",
 });
 
 css.class2(cls.row, cls.rowSelected, {
@@ -186,6 +221,10 @@ css.class(cls.icon, {
   transition: "transform 150ms ease-in",
   color: colors.iconRegular,
 });
+css.parentChild(cls.appDuringItemDrag, cls.icon, {
+  cursor: "inherit",
+});
+
 css.hover(cls.icon, {
   transform: "scale(1.4)",
   color: colors.iconHover,

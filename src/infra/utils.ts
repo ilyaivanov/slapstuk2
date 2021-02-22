@@ -59,3 +59,6 @@ export const cn = (classDefinitions: {
 
 export const getScrollDistanceFromBottom = (element: HTMLElement) =>
   element.scrollHeight - element.scrollTop - element.offsetHeight;
+
+export const distance = (a: Point, b: Point) =>
+  Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));

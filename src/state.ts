@@ -8,6 +8,9 @@ export type RootState = {
   uiOptions: UIOptions;
   //UI state is technical state not directly relevant to functional requirements (is mouse down or not)
   uiState: UIState;
+
+  dragState?: DragState;
+  dragDestination?: DragDestination;
 };
 
 const defaultItems: Items = {
@@ -71,6 +74,24 @@ export type ContextMenu = {
   y: number;
   itemId: string;
 };
+
+export type DragDestination = {
+  itemUnderId: string;
+  itemUnderRect: DOMRect;
+  itemPosition: "after" | "before" | "inside";
+  itemUnderLevel: number;
+};
+
+export type DragState =
+  | {
+      type: "mouseDownNoDrag";
+      itemId: string;
+      point: Point;
+    }
+  | {
+      type: "draggingItem";
+      itemId: string;
+    };
 
 export type GlobalAppState = "Loading" | "Loaded";
 
@@ -232,6 +253,9 @@ export const reducer = (state: RootState, action: RootAction): RootState => {
   if (action.type === "user-state-loaded") {
     const { payload } = action;
     const items = payload ? JSON.parse(payload.itemsSerialized) : defaultItems;
+    //@ts-expect-error
+    global.items = items;
+    // console.log(Object.keys(items).length);
     const selectedNode = payload ? payload.selectedItemId : "HOME";
     return {
       ...state,
@@ -275,6 +299,15 @@ export const reducer = (state: RootState, action: RootAction): RootState => {
       },
     };
   }
+  if (action.type === "dnd/setDragState") {
+    return { ...state, dragState: action.payload };
+  }
+  if (action.type === "dnd/setDragDestination") {
+    return { ...state, dragDestination: action.payload };
+  }
+  if (action.type === "dnd/completeDrag") {
+    return { ...state, dragDestination: undefined, dragState: undefined };
+  }
   return state;
 };
 
@@ -305,6 +338,9 @@ type RootAction =
   | ActionPayload<"item-delete", string>
   | ActionPayload<"item-create", string>
   | ActionPayload<"user-state-loaded", PersistedState>
+  | ActionPayload<"dnd/setDragState", DragState | undefined>
+  | ActionPayload<"dnd/setDragDestination", DragDestination | undefined>
+  | ActionPlain<"dnd/completeDrag">
   | ActionPayload<"player/play", string>
   | ActionPlain<"player/playNext">;
 
@@ -404,6 +440,36 @@ export const actions = {
   playVideo: (itemId: string) =>
     globalDispatch({ type: "player/play", payload: itemId }),
   playNextVideo: () => globalDispatch({ type: "player/playNext" }),
+
+  //Drag and drop
+  mouseDownOnItem: (itemId: string, point: Point) =>
+    globalDispatch({
+      type: "dnd/setDragState",
+      payload: {
+        type: "mouseDownNoDrag",
+        itemId,
+        point,
+      },
+    }),
+  setDragDestination: (dragDestination: DragDestination) =>
+    globalDispatch({
+      type: "dnd/setDragDestination",
+      payload: dragDestination,
+    }),
+  startDragging: (itemId: string) =>
+    globalDispatch({
+      type: "dnd/setDragState",
+      payload: {
+        type: "draggingItem",
+        itemId,
+      },
+    }),
+  completeDnd: () => globalDispatch({ type: "dnd/completeDrag" }),
+  removeDestination: () =>
+    globalDispatch({
+      type: "dnd/setDragDestination",
+      payload: undefined,
+    }),
 };
 
 //Some behaviour on top of items
