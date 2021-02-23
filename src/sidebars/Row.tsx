@@ -172,6 +172,7 @@ const RowInputField = ({ id, name }: { id: string; name: string }) => {
       onKeyUp={onKeyUp}
       onChange={(e) => actions.setNewName(e.currentTarget.value)}
       onBlur={() => actions.finishRenamingItem()}
+      onClick={(e) => e.stopPropagation()}
     />
   );
 };
