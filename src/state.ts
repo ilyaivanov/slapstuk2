@@ -264,7 +264,10 @@ export const reducer = (state: RootState, action: RootAction): RootState => {
     const selectedNode = payload ? payload.selectedItemId : "HOME";
     return {
       ...state,
-      items,
+      items: {
+        ...items,
+        SEARCH: defaultItems.SEARCH,
+      },
       uiOptions: {
         ...state.uiOptions,
         selectedNode,
