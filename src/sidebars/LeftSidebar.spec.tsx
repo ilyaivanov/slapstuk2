@@ -1,6 +1,5 @@
 import React from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react";
-import App from "../App";
 import { ClassName, cls, tIds } from "../infra";
 import * as items from "../state";
 import LeftSidebar from "./LeftSidebar";
@@ -85,28 +84,6 @@ describe("Slaptuk sidebar", () => {
     });
   });
 
-  xdescribe("LOADING SUBITEMS", () => {
-    describe("clicking on an item that requires loading", () => {
-      beforeEach(() => fireEvent.click(getChevronForItem("2")));
-
-      it("should show a loading indicator", () => {
-        expect(getLoadingForItem("2")).toBeInTheDocument();
-      });
-
-      describe("when loading finishes", () => {
-        beforeEach(() => {
-          act(() => {
-            jest.runAllTimers();
-          });
-        });
-
-        it("should show some items subitems for second", () => {
-          expect(queryChildrenContainerForItem("2")).toBeInTheDocument();
-        });
-      });
-    });
-  });
-
   describe("FOCUS", () => {
     describe("Focusing on a first item", () => {
       beforeEach(() => fireEvent.click(getFocusButtonForItem("1")));
@@ -176,8 +153,10 @@ describe("Slaptuk sidebar", () => {
 
     describe("when hiding left sidebar", () => {
       beforeEach(() => {
-        items.actions.assignUiOptions({
-          isLeftSidebarVisible: false,
+        act(() => {
+          items.actions.assignUiOptions({
+            isLeftSidebarVisible: false,
+          });
         });
       });
       it("negative left margin should be set to its width (by default 300px)", () => {
@@ -273,8 +252,6 @@ describe("Slaptuk sidebar", () => {
       expect(getRowTextForItem("555")).toHaveTextContent("My Foo");
     });
   });
-
-  it.todo("load user settings from backend");
 });
 
 //actions

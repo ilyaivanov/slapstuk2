@@ -1,4 +1,5 @@
 import React from "react";
+import DragAvatar from "../dragAndDrop/DragAvatar";
 import { cls, colors, css, icons, utils } from "../infra";
 import * as items from "../state";
 import { actions, RenameState, isOpenAtSidebar } from "../state";
@@ -44,23 +45,7 @@ const Row = ({
       }
       onMouseMove={
         dragState && dragState.type == "draggingItem"
-          ? (e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              const isOnTheSecondHalf = e.clientY >= rect.top + rect.height / 2;
-              const itemInsideBoundary = 32 + level * PADDING_PER_LEVEL;
-              const isInside = e.clientX > itemInsideBoundary;
-              actions.setDragDestination({
-                itemPosition:
-                  isInside && isOnTheSecondHalf
-                    ? "inside"
-                    : isOnTheSecondHalf
-                    ? "after"
-                    : "before",
-                itemUnderId: item.id,
-                itemUnderRect: rect,
-                itemUnderLevel: level,
-              });
-            }
+          ? (e) => DragAvatar.mouseMoveOverSidebarRowDuringDrag(e, item, level)
           : undefined
       }
     >
@@ -219,6 +204,7 @@ css.class(cls.icon, {
   transition: "transform 150ms ease-in",
   color: colors.iconRegular,
 });
+
 css.parentChild(cls.appDuringItemDrag, cls.icon, {
   cursor: "inherit",
 });
@@ -227,13 +213,11 @@ css.hover(cls.icon, {
   transform: "scale(1.4)",
   color: colors.iconHover,
 });
-css.class(cls.iconHidden, {
-  opacity: 0,
-  pointerEvents: "none",
-});
+
 css.active(cls.icon, {
   transform: "scale(1.4) translate3d(0, 1px, 0)",
 });
+
 css.class(cls.rowIcon, {
   width: 9,
   minWidth: 9,
@@ -318,6 +302,11 @@ css.parentHover(cls.row, cls.rowMenuButton, {
 css.parentHover(cls.rowMenuButton, cls.rowMenuIcon, {
   color: colors.iconHover,
   transform: "scale(1.2)",
+});
+
+css.class3(cls.rowChevron, cls.icon, cls.iconHidden, {
+  opacity: 0,
+  pointerEvents: "none",
 });
 
 export default Row;

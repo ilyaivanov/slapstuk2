@@ -1,7 +1,8 @@
 import React from "react";
 import LoadingNineDots from "../commonComponents/LoadingNineDots";
 import LoadingStripe from "../commonComponents/LoadingStripe";
-import { cls, colors, css, utils } from "../infra";
+import DragAvatar from "../dragAndDrop/DragAvatar";
+import { cls, css, utils } from "../infra";
 import * as items from "../state";
 import Card from "./Card";
 import * as c from "./constants";
@@ -12,6 +13,7 @@ type GalleryProps = {
   allItems: Items;
   nodeSelected: string;
   itemBeingPlayed: string | undefined;
+  dragState: items.DragState | undefined;
 };
 
 class Gallery extends React.Component<GalleryProps> {
@@ -62,21 +64,38 @@ class Gallery extends React.Component<GalleryProps> {
     //awaiting component did mount to set columns count based on gallery ref
     if (columnsCount == 0) return null;
 
-    return utils.generateNumbers(columnsCount).map((rowNumber) => (
-      <div className={cls.galleryColumn} key={"col-" + rowNumber}>
-        {items
-          .getChildren(this.props.nodeSelected, this.props.allItems)
-          .filter((_, index) => index % columnsCount == rowNumber)
-          .map((item) => (
-            <Card
-              key={item.id}
-              item={item}
-              allItems={this.props.allItems}
-              itemIdBeingPlayed={this.props.itemBeingPlayed}
-            />
-          ))}
-      </div>
-    ));
+    return utils.generateNumbers(columnsCount).map((rowNumber) => {
+      const { allItems, nodeSelected, dragState } = this.props;
+      return (
+        <div
+          className={cls.galleryColumn}
+          key={"col-" + rowNumber}
+          onMouseMove={
+            dragState && dragState.type === "draggingItem"
+              ? (e) =>
+                  DragAvatar.mouseMoveOverGalleryColumnDuringDrag(
+                    e,
+                    items.getChildren(nodeSelected, allItems),
+                    dragState
+                  )
+              : undefined
+          }
+        >
+          {items
+            .getChildren(this.props.nodeSelected, this.props.allItems)
+            .filter((_, index) => index % columnsCount == rowNumber)
+            .map((item) => (
+              <Card
+                key={item.id}
+                item={item}
+                allItems={this.props.allItems}
+                itemIdBeingPlayed={this.props.itemBeingPlayed}
+                dragState={this.props.dragState}
+              />
+            ))}
+        </div>
+      );
+    });
   };
   render() {
     const { allItems, nodeSelected } = this.props;
@@ -104,6 +123,7 @@ class Gallery extends React.Component<GalleryProps> {
 
 css.class(cls.gallery, {
   position: "relative",
+  userSelect: "none",
 });
 
 css.class(cls.galleryScrollArea, {
@@ -112,15 +132,14 @@ css.class(cls.galleryScrollArea, {
 css.text(css.styles.cssTextForScrollBar(cls.galleryScrollArea, { width: 8 }));
 
 css.class(cls.galleryColumnContainer, {
-  paddingTop: c.GALLERY_GAP,
-  paddingRight: c.GALLERY_GAP,
   display: "flex",
   flexDirection: "row",
+  alignItems: "stretch",
+  minHeight: "100%",
 });
 
 css.class(cls.galleryColumn, {
   flex: 1,
-  marginLeft: c.GALLERY_GAP,
 });
 
 export default Gallery;

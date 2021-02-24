@@ -47,6 +47,7 @@ function App() {
   const [state, dispatch] = React.useReducer(items.reducer, items.initialState);
   items.setGlobalDispatch(dispatch);
   const galleryRef = React.createRef<Gallery>();
+
   const onSidebarResize = () => {
     if (galleryRef.current) galleryRef.current.updateColumnsCount();
   };
@@ -107,6 +108,7 @@ function App() {
           allItems={state.items}
           nodeSelected={state.uiOptions.selectedNode}
           itemBeingPlayed={state.uiOptions.itemIdBeingPlayed}
+          dragState={state.dragState}
         />
 
         <Player

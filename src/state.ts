@@ -75,11 +75,14 @@ export type ContextMenu = {
   itemId: string;
 };
 
+export type DropPlacement = "after" | "before" | "inside" | "instead";
+
 export type DragDestination = {
   itemUnderId: string;
-  itemUnderRect: DOMRect;
-  itemPosition: "after" | "before" | "inside";
-  itemUnderLevel: number;
+  itemPosition: DropPlacement;
+  width: number;
+  top: number;
+  left: number;
 };
 
 export type DragState =
@@ -97,14 +100,10 @@ export type GlobalAppState = "Loading" | "Loaded";
 
 const itemsReducer = (items: Items, action: RootAction): Items => {
   if (action.type == "change-item") {
-    const newItem: any = {
-      ...items[action.payload.id],
+    return assignItem(items, action.payload.id, (item) => ({
+      ...item,
       ...action.payload,
-    };
-    return {
-      ...items,
-      [action.payload.id]: newItem,
-    };
+    }));
   }
   if (action.type == "item-delete") {
     const parent = getParent(action.payload, items);
@@ -139,6 +138,12 @@ const itemsReducer = (items: Items, action: RootAction): Items => {
         ...newItems,
       };
     }
+  }
+  if (action.type === "item-move") {
+    const { itemToMove, relativePosition, itemToMoveTo } = action.payload;
+    if (relativePosition === "instead")
+      return setItemOnPlaceOf(items, itemToMove, itemToMoveTo);
+    else return drop(items, itemToMove, itemToMoveTo, relativePosition);
   }
   return items;
 };
@@ -306,7 +311,24 @@ export const reducer = (state: RootState, action: RootAction): RootState => {
     return { ...state, dragDestination: action.payload };
   }
   if (action.type === "dnd/completeDrag") {
-    return { ...state, dragDestination: undefined, dragState: undefined };
+    console.log("dnd/completeDrag");
+    const newItems =
+      state.dragDestination && state.dragState
+        ? itemsReducer(state.items, {
+            type: "item-move",
+            payload: {
+              itemToMove: state.dragState.itemId,
+              itemToMoveTo: state.dragDestination.itemUnderId,
+              relativePosition: state.dragDestination.itemPosition,
+            },
+          })
+        : state.items;
+    return {
+      ...state,
+      items: newItems,
+      dragDestination: undefined,
+      dragState: undefined,
+    };
   }
   return state;
 };
@@ -324,7 +346,13 @@ type ItemModification<ItemType extends Item> = Partial<ItemType> & {
   id: string;
 };
 
-type RootAction =
+export type ItemMovement = {
+  itemToMove: string;
+  itemToMoveTo: string;
+  relativePosition: DropPlacement;
+};
+
+export type RootAction =
   | ActionPayload<"change-item", ItemModification<Item>>
   | ActionPayload<"change-ui-options", Partial<UIOptions>>
   | ActionPayload<"change-ui-state", Partial<UIState>>
@@ -337,6 +365,7 @@ type RootAction =
   | ActionPlain<"item-apply-rename">
   | ActionPayload<"item-delete", string>
   | ActionPayload<"item-create", string>
+  | ActionPayload<"item-move", ItemMovement>
   | ActionPayload<"user-state-loaded", PersistedState>
   | ActionPayload<"dnd/setDragState", DragState | undefined>
   | ActionPayload<"dnd/setDragDestination", DragDestination | undefined>
@@ -548,10 +577,13 @@ export const getChildren = (itemId: string, allItems: Items): Item[] => {
   else return [];
 };
 
-export const getParent = (itemId: string, allItems: Items): Item | undefined =>
+export const getParent = (
+  itemId: string,
+  allItems: Items
+): ItemContainer | undefined =>
   Object.values(allItems).find(
     (item) => isContainer(item) && item.children.indexOf(itemId) >= 0
-  );
+  ) as ItemContainer;
 
 export const createPersistedState = (state: RootState): PersistedState => {
   const homeNodes: Items = {};
@@ -628,3 +660,83 @@ export const getImageSrc = (item: Item): string | undefined => {
 let globalDispatch: React.Dispatch<RootAction>;
 export const setGlobalDispatch = (dispatch: React.Dispatch<RootAction>) =>
   (globalDispatch = dispatch);
+
+///DND HELPERS
+
+const findParentId = (items: Items, id: string) =>
+  getParent(id, items)?.id as string;
+
+export const drop = (
+  items: Items,
+  itemBeingDragged: string,
+  itemToDropAround: string,
+  howToDrop: "before" | "after" | "inside"
+): Items => {
+  const parentId = findParentId(items, itemBeingDragged || "");
+  const copyItems = assignItem<ItemContainer>(items, parentId, (i) => ({
+    children: i.children.filter((child) => child !== itemBeingDragged),
+  }));
+  if (howToDrop === "inside") {
+    let targetIndex = 0;
+
+    const itemToDropAroundC = copyItems[itemToDropAround] as ItemContainer;
+    const newChildren = [...itemToDropAroundC.children];
+    newChildren.splice(targetIndex, 0, itemBeingDragged);
+    copyItems[itemToDropAround] = {
+      ...itemToDropAroundC,
+      children: newChildren,
+    };
+  } else {
+    const nodeUnderParentId = findParentId(copyItems, itemToDropAround);
+    if (howToDrop == "after") {
+      return assignItem<ItemContainer>(copyItems, nodeUnderParentId, (i) => ({
+        children: i.children
+          .map((id) => (id == itemToDropAround ? [id, itemBeingDragged] : id))
+          .flat(),
+      }));
+    } else if (howToDrop == "before") {
+      return assignItem<ItemContainer>(copyItems, nodeUnderParentId, (i) => ({
+        children: i.children
+          .map((id) => (id == itemToDropAround ? [itemBeingDragged, id] : id))
+          .flat(),
+      }));
+    } else {
+      throw new Error();
+    }
+  }
+
+  return copyItems;
+};
+
+export const setItemOnPlaceOf = (
+  items: Items,
+  itemBeingDragged: string,
+  itemToReplace: string
+): Items => {
+  const parentOfItemBeingDragged = findParentId(items, itemBeingDragged || "");
+  const parentTargetItemId = findParentId(items, itemToReplace || "");
+
+  if (parentOfItemBeingDragged === parentTargetItemId) {
+    const parentItem = items[parentOfItemBeingDragged] as ItemContainer;
+    const parentChildren = parentItem.children;
+    const targetIndex = parentChildren.indexOf(itemToReplace);
+    const currentIndex = parentChildren.indexOf(itemBeingDragged);
+    const dropDestination = targetIndex < currentIndex ? "before" : "after";
+    return drop(items, itemBeingDragged, itemToReplace, dropDestination);
+  } else {
+    return drop(items, itemBeingDragged, itemToReplace, "before");
+  }
+};
+
+const assignItem = <T extends Item>(
+  items: Items,
+  itemId: string,
+  mapper: (item: T) => Partial<T>
+): Items =>
+  ({
+    ...items,
+    [itemId]: {
+      ...items[itemId],
+      ...mapper(items[itemId] as T),
+    },
+  } as Items);

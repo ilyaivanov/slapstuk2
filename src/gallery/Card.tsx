@@ -7,15 +7,17 @@ import CardPreviewImage from "./CardPreviewImage";
 import LoadingNineDots from "../commonComponents/LoadingNineDots";
 import LoadingStripe from "../commonComponents/LoadingStripe";
 import Subitem from "./Subitem";
+import DragAvatar from "../dragAndDrop/DragAvatar";
 const PLAYER_HEIGHT = 40;
 
 type Props = {
   item: Item;
   allItems: Items;
   itemIdBeingPlayed: string | undefined;
+  dragState: items.DragState | undefined;
 };
 
-const Card = ({ item, allItems, itemIdBeingPlayed }: Props) => {
+const Card = ({ item, allItems, itemIdBeingPlayed, dragState }: Props) => {
   const onSubtracksScroll = (e: React.MouseEvent<HTMLDivElement>) => {
     if (
       utils.getScrollDistanceFromBottom(e.currentTarget) < 5 &&
@@ -30,62 +32,90 @@ const Card = ({ item, allItems, itemIdBeingPlayed }: Props) => {
 
   return (
     <div
-      className={utils.cn({
-        [cls.card]: true,
-        [cls.cardBeingPlayed]: item.id === itemIdBeingPlayed,
-      })}
+      className={cls.cardContainer}
+      onMouseMove={
+        dragState && dragState.type == "draggingItem"
+          ? (e) => DragAvatar.mouseMoveOverCardDuringDrag(e, item)
+          : undefined
+      }
     >
       <div
-        className={cls.cardImageWithTextContainer}
-        onClick={() => {
-          if (items.isContainer(item)) {
-            if (items.isNeedsToBeLoaded(item)) items.actions.loadItem(item);
-            items.actions.toggleItemInGallery(item);
-          } else items.actions.playVideo(item.id);
-        }}
+        className={utils.cn({
+          [cls.card]: true,
+          [cls.cardBeingPlayed]: item.id === itemIdBeingPlayed,
+        })}
+        onMouseDown={(e) =>
+          items.actions.mouseDownOnItem(item.id, { x: e.clientX, y: e.clientY })
+        }
       >
-        <CardPreviewImage item={item} allItems={allItems} />
         <div
-          className={utils.cn({
-            [cls.cardText]: true,
-            [cls.cardTextForFolder]: items.isContainer(item),
-          })}
+          className={cls.cardImageWithTextContainer}
+          onClick={() => {
+            if (items.isContainer(item)) {
+              if (items.isNeedsToBeLoaded(item)) items.actions.loadItem(item);
+              items.actions.toggleItemInGallery(item);
+            } else items.actions.playVideo(item.id);
+          }}
         >
-          {item.title}
+          <CardPreviewImage item={item} allItems={allItems} />
+          <div
+            className={utils.cn({
+              [cls.cardText]: true,
+              [cls.cardTextForFolder]: items.isContainer(item),
+            })}
+          >
+            {item.title}
+          </div>
         </div>
-      </div>
-      <div className={cls.subtracksContainer} onScroll={onSubtracksScroll}>
-        {items.isOpenAtGallery(item) &&
-          (isEmptyAndLoading() ? (
-            <div className={cls.cardLoadingSpinnerContainer}>
-              <LoadingNineDots />
-            </div>
-          ) : (
-            items
-              .getChildren(item.id, allItems)
-              .map((item) => (
-                <Subitem
-                  key={item.id}
-                  item={item}
-                  allItems={allItems}
-                  itemIdBeingPlayed={itemIdBeingPlayed}
-                />
-              ))
-          ))}
-        {items.isLoadingNextPage(item) && <LoadingStripe isActive isBottom />}
-      </div>
+        <div className={cls.subtracksContainer} onScroll={onSubtracksScroll}>
+          {items.isOpenAtGallery(item) &&
+            (isEmptyAndLoading() ? (
+              <div className={cls.cardLoadingSpinnerContainer}>
+                <LoadingNineDots />
+              </div>
+            ) : (
+              items
+                .getChildren(item.id, allItems)
+                .map((item) => (
+                  <Subitem
+                    key={item.id}
+                    item={item}
+                    allItems={allItems}
+                    itemIdBeingPlayed={itemIdBeingPlayed}
+                    dragState={dragState}
+                  />
+                ))
+            ))}
+          {items.isLoadingNextPage(item) && <LoadingStripe isActive isBottom />}
+        </div>
 
-      <CardTriangle item={item} />
+        <CardTriangle item={item} />
+      </div>
     </div>
   );
 };
 
 export default Card;
-
+css.class(cls.cardContainer, {
+  paddingTop: c.GALLERY_GAP,
+  paddingLeft: c.GALLERY_GAP / 2,
+  paddingRight: c.GALLERY_GAP / 2,
+});
+css.selector(`.${cls.galleryColumn}:first-of-type .${cls.cardContainer}`, {
+  paddingLeft: c.GALLERY_GAP,
+});
+css.selector(`.${cls.galleryColumn}:last-of-type .${cls.cardContainer}`, {
+  paddingRight: c.GALLERY_GAP,
+});
+// css.firstOfType(cls.cardContainer, {
+//   paddingTop: c.GALLERY_GAP,
+// });
+css.lastOfType(cls.cardContainer, {
+  paddingBottom: c.GALLERY_GAP,
+});
 css.class(cls.card, {
   color: "white",
   backgroundColor: colors.card,
-  marginBottom: c.GALLERY_GAP,
   borderRadius: 4,
   border: "1px solid rgba(255, 255, 255, 0.1)",
   cursor: "pointer",
@@ -100,6 +130,11 @@ css.class(cls.card, {
 
 css.hover(cls.cardImageWithTextContainer, {
   backgroundColor: colors.cardHover,
+});
+
+css.parentChild(cls.appDuringItemDrag, cls.cardImageWithTextContainer, {
+  cursor: "grabbing",
+  backgroundColor: "transparent",
 });
 
 css.hover(cls.card, {

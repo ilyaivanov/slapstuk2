@@ -1,3 +1,4 @@
+import { GALLERY_GAP } from "../gallery/constants";
 import React from "react";
 import { cls, colors, css, utils, zIndexes } from "../infra";
 import { distance } from "../infra/utils";
@@ -66,30 +67,144 @@ class DragAvatar extends React.Component<DndListenerProps> {
   updateCurrentAvatarPosition = (e: MouseEvent) =>
     this.setState({ mousePositionDuringDrag: { x: e.clientX, y: e.clientY } });
 
-  renderDragDestination = (dragDestination: items.DragDestination) => {
-    const rect = dragDestination.itemUnderRect;
+  static mouseMoveOverSidebarRowDuringDrag = (
+    e: React.MouseEvent<HTMLDivElement>,
+    item: Item,
+    level: number
+  ) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const isOnTheSecondHalf = e.clientY >= rect.top + rect.height / 2;
+    const itemInsideBoundary = 32 + level * PADDING_PER_LEVEL;
+    const isInside = e.clientX > itemInsideBoundary;
 
-    const targetLevel =
-      dragDestination.itemPosition == "inside"
-        ? dragDestination.itemUnderLevel + 1
-        : dragDestination.itemUnderLevel;
     const visualPaddingToANonZeroLevel = 8;
+    const itemPosition =
+      isInside && isOnTheSecondHalf
+        ? "inside"
+        : isOnTheSecondHalf
+        ? "after"
+        : "before";
+
+    const targetLevel = itemPosition === "inside" ? level + 1 : level;
     const left =
       targetLevel == 0
         ? 0
         : visualPaddingToANonZeroLevel + targetLevel * PADDING_PER_LEVEL;
+
+    const top =
+      itemPosition == "before"
+        ? rect.top - DRAG_DESTINATION_HEIGHT_HALF
+        : rect.bottom - DRAG_DESTINATION_HEIGHT_HALF;
+    items.actions.setDragDestination({
+      itemPosition,
+      itemUnderId: item.id,
+      left,
+      width: rect.width - left,
+      top,
+    });
+  };
+
+  static mouseMoveOverGallerySubitemDuringDrag = (
+    e: React.MouseEvent<HTMLDivElement>,
+    item: Item
+  ) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const isOnTheSecondHalf = e.clientY >= rect.top + rect.height / 2;
+    const itemPosition = isOnTheSecondHalf ? "after" : "before";
+    const top =
+      itemPosition == "before"
+        ? rect.top - DRAG_DESTINATION_HEIGHT_HALF
+        : rect.bottom - DRAG_DESTINATION_HEIGHT_HALF;
+    items.actions.setDragDestination({
+      itemPosition: isOnTheSecondHalf ? "after" : "before",
+      itemUnderId: item.id,
+      left: rect.left,
+      width: rect.width,
+      top,
+    });
+    //marks such that gallery column mouse move won't handle this event
+    //I can't use stop propagation here, because I'm processing this event and the document level
+    e.detail = 1;
+  };
+
+  static findDragDestinationPosition = (
+    itemsInGallery: Item[],
+    dragState: items.DragState
+  ): {
+    top: number;
+    left: number;
+    width: number;
+  } => {
+    const column = Array.from(
+      document.getElementsByClassName(cls.galleryColumn)
+    );
+
+    let lastColumnIndex = itemsInGallery.length % column.length;
+    if (lastColumnIndex < 0) lastColumnIndex = column.length - 1;
+    const isItemBeingDraggeedInGallery =
+      itemsInGallery.map((i) => i.id).indexOf(dragState.itemId) >= 0;
+
+    if (isItemBeingDraggeedInGallery) {
+      lastColumnIndex -= 1;
+      if (lastColumnIndex < 0) lastColumnIndex = 0;
+    }
+    const columnWithLastItem = column[lastColumnIndex];
+    const lastCard = columnWithLastItem.lastChild?.lastChild as HTMLElement;
+    const rect = lastCard.getBoundingClientRect();
+    return {
+      left: rect.left,
+      width: rect.width,
+      top: isItemBeingDraggeedInGallery
+        ? rect.top - GALLERY_GAP / 2 + DRAG_DESTINATION_HEIGHT_HALF
+        : rect.bottom + GALLERY_GAP / 2 - DRAG_DESTINATION_HEIGHT_HALF,
+    };
+  };
+  static mouseMoveOverGalleryColumnDuringDrag = (
+    e: React.MouseEvent<HTMLDivElement>,
+    itemsInGallery: Item[],
+    dragState: items.DragState
+  ) => {
+    if (e.detail == 1) return;
+    const position = DragAvatar.findDragDestinationPosition(
+      itemsInGallery,
+      dragState
+    );
+    items.actions.setDragDestination({
+      itemPosition: "after",
+      itemUnderId: itemsInGallery[itemsInGallery.length - 1].id,
+      ...position,
+    });
+  };
+
+  static mouseMoveOverCardDuringDrag = (
+    e: React.MouseEvent<HTMLDivElement>,
+    item: Item
+  ) => {
+    if (e.detail == 1) return;
+    e.detail = 1;
+    const card = e.currentTarget;
+    if (card && card.lastChild) {
+      //getting card from the card-container
+      const rect = (card.lastChild as Element).getBoundingClientRect();
+      items.actions.setDragDestination({
+        itemPosition: "instead",
+        itemUnderId: item.id,
+        left: rect.left,
+        width: rect.width,
+        top: rect.top - GALLERY_GAP / 2 + DRAG_DESTINATION_HEIGHT_HALF,
+      });
+    }
+  };
+
+  renderDragDestination = (dragDestination: items.DragDestination) => {
     return (
       <div
         data-testid="drag-destination"
         className={cls.dragDesignation}
         style={{
-          left: left,
-          top:
-            //inside same as after, just left is different
-            dragDestination.itemPosition == "before"
-              ? rect.top - DRAG_DESTINATION_HEIGHT_HALF
-              : rect.bottom - DRAG_DESTINATION_HEIGHT_HALF,
-          width: rect.width - left,
+          left: dragDestination.left,
+          top: dragDestination.top,
+          width: dragDestination.width,
         }}
       />
     );
@@ -178,13 +293,13 @@ css.class(cls.dragAvatar, {
   //   padding: "2px 6px",
   //   fontWeight: 300,
 });
-const DRAG_DESTINATION_HEIGHT = 3;
+const DRAG_DESTINATION_HEIGHT = 4;
 const DRAG_DESTINATION_HEIGHT_HALF = Math.floor(DRAG_DESTINATION_HEIGHT / 2);
 
 css.class(cls.dragDesignation, {
   position: "fixed",
   height: DRAG_DESTINATION_HEIGHT,
-  backgroundColor: "red",
+  backgroundColor: colors.dragDestination,
   pointerEvents: "none",
 });
 

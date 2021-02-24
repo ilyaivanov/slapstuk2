@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
+import Gallery from "../gallery/Gallery";
 import LeftSidebar from "../sidebars/LeftSidebar";
 import * as items from "../state";
 import DragAvatar from "./DragAvatar";
@@ -36,11 +37,17 @@ const RenderTestSidebarGallery = () => {
     <>
       <LeftSidebar state={state} onResize={jest.fn()} />
       <DragAvatar state={state} />
+      <Gallery
+        allItems={state.items}
+        nodeSelected="HOME"
+        itemBeingPlayed={undefined}
+        dragState={state.dragState}
+      />
     </>
   );
 };
 
-describe("Having a Dnd listener", () => {
+describe("Sidebar", () => {
   beforeEach(() => {
     render(<RenderTestSidebarGallery />);
   });
@@ -113,7 +120,7 @@ describe("Having a Dnd listener", () => {
             clientY: 59,
             target,
           });
-          expect(query("drag-destination")).toHaveStyle("top: 49px");
+          expect(query("drag-destination")).toHaveStyle("top: 48px");
         });
 
         it("mouse position at 60 should draw line at 69px (bottom - destination height)", () => {
@@ -122,7 +129,7 @@ describe("Having a Dnd listener", () => {
             clientY: 60,
             target,
           });
-          expect(query("drag-destination")).toHaveStyle("top: 69px");
+          expect(query("drag-destination")).toHaveStyle("top: 68px");
         });
 
         it("on mouse up should remove drag destination", () => {

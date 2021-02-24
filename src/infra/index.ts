@@ -37,6 +37,8 @@ export const css = {
   class: cssClass,
   class2: (c1: string, c2: string, style: Styles) =>
     selector(`.${c1}.${c2}`, style),
+  class3: (c1: string, c2: string, c3: string, style: Styles) =>
+    selector(`.${c1}.${c2}.${c3}`, style),
   parentChild: (c1: string, c2: string, style: Styles) =>
     selector(`.${c1} .${c2}`, style),
   onParentHover: (c1: string, c2: string, style: Styles) =>
@@ -47,6 +49,8 @@ export const css = {
     selector(`.${className}:focus`, style),
   lastOfType: (className: string, style: Styles) =>
     selector(`.${className}:last-of-type`, style),
+  firstOfType: (className: string, style: Styles) =>
+    selector(`.${className}:first-of-type`, style),
   parentHover: (parentClass: string, childClass: string, style: Styles) =>
     selector(`.${parentClass}:hover .${childClass}`, style),
   text: cssText,

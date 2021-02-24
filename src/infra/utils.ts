@@ -26,6 +26,20 @@ export const max = (vals: number[]): number | undefined => {
   }
   return undefined;
 };
+//returns last item with the biggest value
+export const maxBy = <T>(
+  vals: T[],
+  getVal: (v: T) => number
+): T | undefined => {
+  if (vals.length > 0) {
+    let max = vals[0];
+    for (var i = 0; i < vals.length; i++) {
+      if (getVal(max) <= getVal(vals[i])) max = vals[i];
+    }
+    return max;
+  }
+  return undefined;
+};
 
 export const findDuplicates = <T>(vals: T[]): T[] => {
   const duplicates = [];

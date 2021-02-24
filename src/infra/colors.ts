@@ -11,6 +11,7 @@ export const selectedRow = `rgba(255,255,255,0.14)`;
 export const sidebarRowHover = `#313131`;
 
 export const primary = "#1565C0";
+export const dragDestination = "rgb(3, 169, 244)";
 
 export const cardBeingPlayedBackground = primary;
 

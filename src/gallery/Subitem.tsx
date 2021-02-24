@@ -1,3 +1,4 @@
+import DragAvatar from "../dragAndDrop/DragAvatar";
 import { cls, colors, css, utils } from "../infra";
 import * as items from "../state";
 import * as c from "./constants";
@@ -6,31 +7,50 @@ type Props = {
   item: Item;
   allItems: Items;
   itemIdBeingPlayed: string | undefined;
+  dragState: items.DragState | undefined;
 };
 
-const Subitem = ({ item, allItems, itemIdBeingPlayed }: Props) => (
-  <div
-    className={utils.cn({
-      [cls.subtrack]: true,
-      [cls.subtrackBeingPlayed]: item.id == itemIdBeingPlayed,
-    })}
-    onClick={() => {
-      if (items.isContainer(item)) {
-        const firstVideo = items.getFirstVideo(item, allItems);
-        if (firstVideo) {
-          items.actions.playVideo(firstVideo.id);
-        }
-      } else items.actions.playVideo(item.id);
-    }}
-  >
-    <img
-      src={items.getFirstImage(item, allItems)}
-      className={cls.subtrackImage + " " + getSubtrackImageType(item)}
-      alt=""
-    />
-    <span>{item.title}</span>
-  </div>
-);
+const Subitem = ({ item, allItems, itemIdBeingPlayed, dragState }: Props) => {
+  const l = (id: string) => {
+    console.log(allItems[id].title);
+    return id;
+  };
+  return (
+    <div
+      className={utils.cn({
+        [cls.subtrack]: true,
+        [cls.subtrackBeingPlayed]: item.id == itemIdBeingPlayed,
+      })}
+      onMouseMove={
+        dragState && dragState.type == "draggingItem"
+          ? (e) => DragAvatar.mouseMoveOverGallerySubitemDuringDrag(e, item)
+          : undefined
+      }
+      onMouseDown={(e) => {
+        e.stopPropagation();
+        items.actions.mouseDownOnItem(l(item.id), {
+          x: e.clientX,
+          y: e.clientY,
+        });
+      }}
+      onClick={() => {
+        if (items.isContainer(item)) {
+          const firstVideo = items.getFirstVideo(item, allItems);
+          if (firstVideo) {
+            items.actions.playVideo(firstVideo.id);
+          }
+        } else items.actions.playVideo(item.id);
+      }}
+    >
+      <img
+        src={items.getFirstImage(item, allItems)}
+        className={cls.subtrackImage + " " + getSubtrackImageType(item)}
+        alt=""
+      />
+      <span>{item.title}</span>
+    </div>
+  );
+};
 
 export default Subitem;
 
@@ -61,8 +81,14 @@ css.class(cls.subtrack, {
   borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
   cursor: "pointer",
 });
+
 css.hover(cls.subtrack, {
   backgroundColor: colors.cardHover,
+});
+
+css.parentChild(cls.appDuringItemDrag, cls.subtrack, {
+  cursor: "grabbing",
+  backgroundColor: "transparent",
 });
 
 css.class2(cls.subtrack, cls.subtrackBeingPlayed, {

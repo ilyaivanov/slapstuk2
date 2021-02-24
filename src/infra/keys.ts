@@ -48,6 +48,7 @@ const classes = {
 
   //Gallery Cards
   card: "",
+  cardContainer: "",
   cardText: "",
   cardTextForFolder: "",
   cardPreviewContainer: "",
