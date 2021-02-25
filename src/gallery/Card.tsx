@@ -1,6 +1,6 @@
 import React from "react";
 import CardTriangle from "./CardTriangle";
-import { cls, colors, css, utils } from "../infra";
+import { cls, CollapsibleContainer, colors, css, utils } from "../infra";
 import * as items from "../state";
 import * as c from "./constants";
 import CardPreviewImage from "./CardPreviewImage";
@@ -17,83 +17,96 @@ type Props = {
   dragState: items.DragState | undefined;
 };
 
-const Card = ({ item, allItems, itemIdBeingPlayed, dragState }: Props) => {
-  const onSubtracksScroll = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (
-      utils.getScrollDistanceFromBottom(e.currentTarget) < 5 &&
-      items.hasNextPage(item)
-    ) {
-      items.actions.loadItem(item);
-    }
-  };
-  const isEmptyAndLoading = () =>
-    items.isLoadingAnything(item) &&
-    items.getChildren(item.id, allItems).length == 0;
-
-  return (
-    <div
-      className={cls.cardContainer}
-      onMouseMove={
-        dragState && dragState.type == "draggingItem"
-          ? (e) => DragAvatar.mouseMoveOverCardDuringDrag(e, item)
-          : undefined
+const Card = React.memo(
+  ({ item, allItems, itemIdBeingPlayed, dragState }: Props) => {
+    const onSubtracksScroll = (e: React.MouseEvent<HTMLDivElement>) => {
+      if (
+        utils.getScrollDistanceFromBottom(e.currentTarget) < 5 &&
+        items.hasNextPage(item)
+      ) {
+        items.actions.loadItem(item);
       }
-    >
+    };
+    const isEmptyAndLoading = () =>
+      items.isLoadingAnything(item) &&
+      items.getChildren(item.id, allItems).length == 0;
+
+    const renderContent = () =>
+      isEmptyAndLoading() ? (
+        <div className={cls.cardLoadingSpinnerContainer}>
+          <LoadingNineDots />
+        </div>
+      ) : (
+        items
+          .getChildren(item.id, allItems)
+          .map((item) => (
+            <Subitem
+              key={item.id}
+              item={item}
+              allItems={allItems}
+              itemIdBeingPlayed={itemIdBeingPlayed}
+              dragState={dragState}
+            />
+          ))
+      );
+    return (
       <div
-        className={utils.cn({
-          [cls.card]: true,
-          [cls.cardBeingPlayed]: item.id === itemIdBeingPlayed,
-        })}
-        onMouseDown={(e) =>
-          items.actions.mouseDownOnItem(item.id, { x: e.clientX, y: e.clientY })
+        className={cls.cardContainer}
+        onMouseMove={
+          dragState && dragState.type == "draggingItem"
+            ? (e) => DragAvatar.mouseMoveOverCardDuringDrag(e, item)
+            : undefined
         }
       >
         <div
-          className={cls.cardImageWithTextContainer}
-          onClick={() => {
-            if (items.isContainer(item)) {
-              if (items.isNeedsToBeLoaded(item)) items.actions.loadItem(item);
-              items.actions.toggleItemInGallery(item);
-            } else items.actions.playVideo(item.id);
-          }}
+          className={utils.cn({
+            [cls.card]: true,
+            [cls.cardBeingPlayed]: item.id === itemIdBeingPlayed,
+          })}
+          onMouseDown={(e) =>
+            items.actions.mouseDownOnItem(item.id, {
+              x: e.clientX,
+              y: e.clientY,
+            })
+          }
         >
-          <CardPreviewImage item={item} allItems={allItems} />
           <div
-            className={utils.cn({
-              [cls.cardText]: true,
-              [cls.cardTextForFolder]: items.isContainer(item),
-            })}
+            className={cls.cardImageWithTextContainer}
+            onClick={() => {
+              if (items.isContainer(item)) {
+                if (items.isNeedsToBeLoaded(item)) items.actions.loadItem(item);
+                items.actions.toggleItemInGallery(item);
+              } else items.actions.playVideo(item.id);
+            }}
           >
-            {item.title}
-          </div>
-        </div>
-        <div className={cls.subtracksContainer} onScroll={onSubtracksScroll}>
-          {items.isOpenAtGallery(item) &&
-            (isEmptyAndLoading() ? (
-              <div className={cls.cardLoadingSpinnerContainer}>
-                <LoadingNineDots />
-              </div>
-            ) : (
-              items
-                .getChildren(item.id, allItems)
-                .map((item) => (
-                  <Subitem
-                    key={item.id}
-                    item={item}
-                    allItems={allItems}
-                    itemIdBeingPlayed={itemIdBeingPlayed}
-                    dragState={dragState}
-                  />
-                ))
-            ))}
-          {items.isLoadingNextPage(item) && <LoadingStripe isActive isBottom />}
-        </div>
+            <CollapsibleContainer isOpen={!items.isOpenAtGallery(item)}>
+              {() => <CardPreviewImage item={item} allItems={allItems} />}
+            </CollapsibleContainer>
 
-        <CardTriangle item={item} />
+            <div
+              className={utils.cn({
+                [cls.cardText]: true,
+                [cls.cardTextForFolder]: items.isContainer(item),
+              })}
+            >
+              {item.title}
+            </div>
+          </div>
+          <div className={cls.subtracksContainer} onScroll={onSubtracksScroll}>
+            <CollapsibleContainer isOpen={items.isOpenAtGallery(item)}>
+              {renderContent}
+            </CollapsibleContainer>
+            {items.isLoadingNextPage(item) && (
+              <LoadingStripe isActive isBottom />
+            )}
+          </div>
+
+          <CardTriangle item={item} />
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  }
+);
 
 export default Card;
 css.class(cls.cardContainer, {

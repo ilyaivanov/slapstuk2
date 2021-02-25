@@ -8,12 +8,7 @@ type CardPreviewImageProps = {
   allItems: Items;
 };
 const CardPreviewImage = ({ item, allItems }: CardPreviewImageProps) => (
-  <div
-    className={utils.cn({
-      [cls.cardPreviewContainer]: true,
-      [cls.cardPreviewContainerClosed]: items.isOpenAtGallery(item),
-    })}
-  >
+  <div className={cls.cardPreviewContainer}>
     {items.isFolder(item) ? (
       <PreviewGrid item={item} allItems={allItems} />
     ) : (

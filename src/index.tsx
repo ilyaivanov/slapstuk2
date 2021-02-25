@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { css } from "./infra";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+import Animations from "./playground/Animations";
 
 css.tag("body", {
   margin: 0,
@@ -15,6 +16,7 @@ css.selector("*", {
 
 ReactDOM.render(
   <React.StrictMode>
+    {/* <Animations /> */}
     <App />
   </React.StrictMode>,
   document.getElementById("root")

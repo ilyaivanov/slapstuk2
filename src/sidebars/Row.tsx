@@ -39,7 +39,10 @@ const Row = ({
         [cls.rowSelected]: isSelected,
       })}
       style={{ paddingLeft: getPaddingForLevel(level) }}
-      onClick={() => actions.selectItem(item.id)}
+      onClick={() => {
+        if (items.isVideo(item)) actions.playVideo(item.id);
+        else actions.selectItem(item.id);
+      }}
       onMouseDown={(e) =>
         actions.mouseDownOnItem(item.id, { x: e.clientX, y: e.clientY })
       }
@@ -113,7 +116,7 @@ const viewItemIcon = (item: Item) => {
         "data-testid": "circle-" + item.id,
         onClick: (e) => {
           e.stopPropagation();
-          actions.focusItem(item.id);
+          actions.playVideo(item.id);
         },
       })
     : items.isChannel(item)
@@ -237,7 +240,7 @@ css.class(cls.rowChevron, {
   minWidth: 13,
   height: 13,
   marginLeft: 6,
-  transition: "opacity 400ms ease-out",
+  transition: "opacity 400ms ease-out, transform 200ms ease-out",
   opacity: 0,
 });
 

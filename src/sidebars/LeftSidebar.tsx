@@ -1,5 +1,13 @@
 import React from "react";
-import { cls, colors, css, icons, tIds, utils } from "../infra";
+import {
+  cls,
+  CollapsibleContainer,
+  colors,
+  css,
+  icons,
+  tIds,
+  utils,
+} from "../infra";
 import * as items from "../state";
 import Row, { getPaddingForLevel } from "../sidebars/Row";
 
@@ -211,10 +219,15 @@ class RowWithChildren extends React.PureComponent<Props> {
     return (
       <>
         {this.renderRow(item, level)}
-        {(items.isOpenAtSidebar(item) || isRootItem) &&
-          (items.isLoadingAnything(item)
-            ? this.renderLoading()
-            : this.renderChildren())}
+        <CollapsibleContainer
+          isOpen={items.isOpenAtSidebar(item) || !!isRootItem}
+        >
+          {() =>
+            items.isLoadingAnything(item)
+              ? this.renderLoading()
+              : this.renderChildren()
+          }
+        </CollapsibleContainer>
       </>
     );
   }

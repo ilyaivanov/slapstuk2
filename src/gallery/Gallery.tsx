@@ -16,7 +16,7 @@ type GalleryProps = {
   dragState: items.DragState | undefined;
 };
 
-class Gallery extends React.Component<GalleryProps> {
+class Gallery extends React.PureComponent<GalleryProps> {
   galleryRef = React.createRef<HTMLDivElement>();
   state = {
     columnsCount: 0,
