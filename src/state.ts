@@ -141,6 +141,7 @@ const itemsReducer = (items: Items, action: RootAction): Items => {
   }
   if (action.type === "item-move") {
     const { itemToMove, relativePosition, itemToMoveTo } = action.payload;
+    if (itemToMove == itemToMoveTo) return items;
     if (relativePosition === "instead")
       return setItemOnPlaceOf(items, itemToMove, itemToMoveTo);
     else return drop(items, itemToMove, itemToMoveTo, relativePosition);
@@ -314,9 +315,14 @@ export const reducer = (state: RootState, action: RootAction): RootState => {
     return { ...state, dragDestination: action.payload };
   }
   if (action.type === "dnd/completeDrag") {
-    console.log("dnd/completeDrag");
-    const newItems =
-      state.dragDestination && state.dragState
+    let newItems: Items;
+    if (state.dragDestination && state.dragState) {
+      const itemBeingDraggedPath = hasItemInPath(
+        state.dragDestination.itemUnderId,
+        state.dragState.itemId,
+        state.items
+      );
+      newItems = !itemBeingDraggedPath
         ? itemsReducer(state.items, {
             type: "item-move",
             payload: {
@@ -326,6 +332,10 @@ export const reducer = (state: RootState, action: RootAction): RootState => {
             },
           })
         : state.items;
+    } else {
+      newItems = state.items;
+    }
+
     return {
       ...state,
       items: newItems,
@@ -587,6 +597,19 @@ export const getParent = (
   Object.values(allItems).find(
     (item) => isContainer(item) && item.children.indexOf(itemId) >= 0
   ) as ItemContainer;
+
+export const hasItemInPath = (
+  itemId: string,
+  potentialParentId: string,
+  allITems: Items
+) => {
+  let parent = getParent(itemId, allITems);
+  while (parent) {
+    if (parent.id == potentialParentId) return true;
+    parent = getParent(parent.id, allITems);
+  }
+  return false;
+};
 
 export const createPersistedState = (state: RootState): PersistedState => {
   const homeNodes: Items = {};

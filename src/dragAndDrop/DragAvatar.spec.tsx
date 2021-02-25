@@ -26,11 +26,11 @@ const initialItems: Items = {
   },
 };
 
-const RenderTestSidebarGallery = () => {
-  const initialState: items.RootState = {
-    ...items.initialState,
-    items: initialItems,
-  };
+const RenderTestSidebarGallery = ({
+  initialState,
+}: {
+  initialState: items.RootState;
+}) => {
   const [state, dispatch] = React.useReducer(items.reducer, initialState);
   items.setGlobalDispatch(dispatch);
   return (
@@ -49,7 +49,14 @@ const RenderTestSidebarGallery = () => {
 
 describe("Sidebar", () => {
   beforeEach(() => {
-    render(<RenderTestSidebarGallery />);
+    render(
+      <RenderTestSidebarGallery
+        initialState={{
+          ...items.initialState,
+          items: initialItems,
+        }}
+      />
+    );
   });
   it("by default should not have drag avatar", () => {
     expect(query("drag-avatar")).not.toBeInTheDocument();
@@ -143,6 +150,84 @@ describe("Sidebar", () => {
         });
       });
     });
+  });
+});
+
+describe("Having two items nested", () => {
+  let initialItems: Items = {
+    HOME: {
+      type: "folder",
+      children: ["1"],
+      id: "HOME",
+      title: "Home",
+    },
+    "1": {
+      type: "folder",
+      children: ["2"],
+      id: "1",
+      title: "First",
+      isOpenFromSidebar: true,
+    },
+    "2": {
+      type: "folder",
+      children: [],
+      id: "2",
+      title: "Second",
+    },
+  };
+  beforeEach(() => {
+    render(
+      <RenderTestSidebarGallery
+        initialState={{
+          ...items.initialState,
+          items: initialItems,
+        }}
+      />
+    );
+  });
+  it("when dragging parent after child it should show an error and do no nothing to items on mouse up", () => {
+    fireEvent.mouseDown(getRowForItem("1"));
+    fireEvent.mouseMove(document, {
+      clientX: 100,
+      clientY: 100,
+    });
+    fireEvent.mouseMove(getRowForItem("2"), {
+      clientX: 100,
+      clientY: 100,
+      target: {
+        getBoundingClientRect: (): Partial<DOMRect> => ({
+          top: 100,
+          height: 20,
+        }),
+      },
+    });
+    expect(
+      screen.getByTestId("drag-destination-info").firstChild
+    ).toContainHTML("Can't");
+    fireEvent.mouseUp(document);
+    expect(getRowForItem("1")).toBeInTheDocument();
+    expect(getRowForItem("2")).toBeInTheDocument();
+  });
+
+  it("moving 1 before 1 should do nothing ", () => {
+    fireEvent.mouseDown(getRowForItem("1"));
+    fireEvent.mouseMove(document, {
+      clientX: 100,
+      clientY: 100,
+    });
+    fireEvent.mouseMove(getRowForItem("1"), {
+      clientX: 100,
+      clientY: 100,
+      target: {
+        getBoundingClientRect: (): Partial<DOMRect> => ({
+          top: 100,
+          height: 20,
+        }),
+      },
+    });
+    fireEvent.mouseUp(document);
+    expect(getRowForItem("1")).toBeInTheDocument();
+    expect(getRowForItem("2")).toBeInTheDocument();
   });
 });
 

@@ -149,14 +149,21 @@ class DragAvatar extends React.Component<DndListenerProps> {
       if (lastColumnIndex < 0) lastColumnIndex = 0;
     }
     const columnWithLastItem = column[lastColumnIndex];
-    const lastCard = columnWithLastItem.lastChild?.lastChild as HTMLElement;
-    const rect = lastCard.getBoundingClientRect();
+    if (columnWithLastItem.hasChildNodes()) {
+      const lastCard = columnWithLastItem.lastChild?.lastChild as HTMLElement;
+      const rect = lastCard.getBoundingClientRect();
+      return {
+        left: rect.left,
+        width: rect.width,
+        top: isItemBeingDraggeedInGallery
+          ? rect.top - GALLERY_GAP / 2 + DRAG_DESTINATION_HEIGHT_HALF
+          : rect.bottom + GALLERY_GAP / 2 - DRAG_DESTINATION_HEIGHT_HALF,
+      };
+    }
     return {
-      left: rect.left,
-      width: rect.width,
-      top: isItemBeingDraggeedInGallery
-        ? rect.top - GALLERY_GAP / 2 + DRAG_DESTINATION_HEIGHT_HALF
-        : rect.bottom + GALLERY_GAP / 2 - DRAG_DESTINATION_HEIGHT_HALF,
+      left: 500,
+      width: 500,
+      top: 500,
     };
   };
   static mouseMoveOverGalleryColumnDuringDrag = (
@@ -211,7 +218,8 @@ class DragAvatar extends React.Component<DndListenerProps> {
   };
 
   renderDragDestinationHelperText = (
-    dragDestination: items.DragDestination
+    dragDestination: items.DragDestination,
+    dragState: items.DragState
   ) => {
     const arrow =
       dragDestination.itemPosition == "inside"
@@ -219,8 +227,26 @@ class DragAvatar extends React.Component<DndListenerProps> {
         : dragDestination.itemPosition == "before"
         ? "↑"
         : "↓";
+    const itemBeingDraggedPath = items.hasItemInPath(
+      dragDestination.itemUnderId,
+      dragState.itemId,
+      this.props.state.items
+    );
+
+    const message = itemBeingDraggedPath ? (
+      <>
+        × Can't move{" "}
+        <span style={{ fontWeight: "bold" }}>
+          {this.props.state.items[dragState.itemId].title}
+        </span>{" "}
+        to it's child.
+      </>
+    ) : (
+      `${arrow} Move ${dragDestination.itemPosition} `
+    );
     return (
       <div
+        data-testid="drag-destination-info"
         style={{
           position: "absolute",
           top: avatarCircleSize + 2,
@@ -237,12 +263,18 @@ class DragAvatar extends React.Component<DndListenerProps> {
           overflow: "hidden",
         }}
       >
-        <span style={{ color: colors.primary }}>
-          {arrow} Move {dragDestination.itemPosition}{" "}
+        <span
+          style={{
+            color: itemBeingDraggedPath ? colors.danger : colors.primary,
+          }}
+        >
+          {message}
         </span>
-        <span style={{ fontWeight: "bold" }}>
-          {this.props.state.items[dragDestination.itemUnderId].title}
-        </span>
+        {!itemBeingDraggedPath && (
+          <span style={{ fontWeight: "bold" }}>
+            {this.props.state.items[dragDestination.itemUnderId].title}
+          </span>
+        )}
       </div>
     );
   };
@@ -262,7 +294,7 @@ class DragAvatar extends React.Component<DndListenerProps> {
           }}
         >
           {dragDestination &&
-            this.renderDragDestinationHelperText(dragDestination)}
+            this.renderDragDestinationHelperText(dragDestination, dragState)}
         </div>
       ) : null;
     let dragDestinationView = dragDestination
