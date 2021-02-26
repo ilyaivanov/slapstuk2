@@ -1,16 +1,14 @@
-import React, { useReducer } from "react";
-import { cls } from "./keys";
-import { cssClass, Styles } from "./style";
+import React from "react";
+import { Styles } from "./style";
 import * as anim from "./animations";
-
-cssClass(cls.childrenContainer, {
-  overflow: "hidden",
-});
 
 type CollapsibleCotainerProps = {
   isOpen: boolean;
   style?: Styles;
+  className?: string;
   children: () => React.ReactNode;
+  onWheel?: (e: React.WheelEvent<HTMLDivElement>) => void;
+  heightProperty?: string;
 };
 
 type State = {
@@ -21,7 +19,7 @@ export default class CollapsibleContainer extends React.PureComponent<
   CollapsibleCotainerProps,
   State
 > {
-  transitionDuration = 200;
+  transitionDuration = 400;
   childRef = React.createRef<HTMLDivElement>();
 
   state = {
@@ -39,6 +37,13 @@ export default class CollapsibleContainer extends React.PureComponent<
     if (this.childRef.current) return this.childRef.current.offsetHeight;
   }
 
+  getPropertyToAnimate = () => {
+    return this.props.heightProperty || "height";
+    // const styles = getComputedStyle(elem);
+    // console.log(styles.flex);
+    // return styles.flex ? "flex" : "height";
+  };
+
   componentDidUpdate(
     prevProps: CollapsibleCotainerProps,
     prevState: State,
@@ -52,12 +57,14 @@ export default class CollapsibleContainer extends React.PureComponent<
           isVisible: true,
         },
         () => {
+          const properyName = this.getPropertyToAnimate();
+          console.log(properyName);
           const a = anim.animate(
             current,
             [
-              { height: 0, opacity: 0 },
+              { [properyName]: "0px", opacity: 0 },
               {
-                height: current.offsetHeight,
+                [properyName]: current.offsetHeight + "px",
                 opacity: 1,
               },
             ],
@@ -71,14 +78,15 @@ export default class CollapsibleContainer extends React.PureComponent<
       );
     } else if (prevProps.isOpen && !this.props.isOpen && current) {
       if (this.revertCurrentAnimations()) return;
+      const properyName = this.getPropertyToAnimate();
       const a = anim.animate(
         current,
         [
           {
-            height: current.offsetHeight,
+            [properyName]: current.offsetHeight + "px",
             opacity: 1,
           },
-          { height: 0, opacity: 0 },
+          { [properyName]: "0px", opacity: 0 },
         ],
         {
           duration: this.transitionDuration,
@@ -128,9 +136,10 @@ export default class CollapsibleContainer extends React.PureComponent<
   render() {
     return (
       <div
-        className={cls.childrenContainer}
+        className={this.props.className}
         ref={this.childRef}
         style={this.props.style}
+        onWheel={this.props.onWheel}
       >
         {this.state.isVisible && this.props.children()}
       </div>

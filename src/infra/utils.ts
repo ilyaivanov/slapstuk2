@@ -64,9 +64,11 @@ export function generateRandomColorHsl() {
   return "hsl(" + hue + ", " + saturation + ", " + lightness + ")";
 }
 
-export const cn = (classDefinitions: {
+export type ClassDefinitions = {
   [className: string]: boolean | undefined;
-}) =>
+};
+
+export const cn = (classDefinitions: ClassDefinitions) =>
   Object.keys(classDefinitions)
     .filter((key) => !!classDefinitions[key])
     .join(" ");

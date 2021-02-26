@@ -74,6 +74,14 @@ const classes = {
   subtrackFolderImage: "",
   subtrackPlaylistImage: "",
   subtrackBeingPlayed: "",
+
+  listGallery: "",
+  listCard: "",
+  listCardChildrenContainer: "",
+  listCardHeader: "",
+  listTrack: "",
+  listTrackPlaying: "",
+  listCardEmptyImage: "",
   //Utility
   galleryLoadingContainer: "",
   loadingStripe: "",

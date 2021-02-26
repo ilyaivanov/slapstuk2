@@ -3,6 +3,13 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { ClassName, cls, tIds } from "../infra";
 import * as items from "../state";
 import LeftSidebar from "./LeftSidebar";
+
+jest.mock(
+  "../infra/CollapsibleContainer",
+  () => ({ isOpen, children }: { isOpen: boolean; children: () => unknown }) =>
+    isOpen ? <>{children()}</> : null
+);
+
 const initialItems: Items = {
   HOME: {
     id: "HOME",
@@ -66,7 +73,9 @@ describe("Slaptuk sidebar", () => {
 
   describe("EXPAND/COLLAPSE ", () => {
     describe("clicking on an item with loaded subitems", () => {
-      beforeEach(() => fireEvent.click(getChevronForItem("1")));
+      beforeEach(() => {
+        fireEvent.click(getChevronForItem("1"));
+      });
       it("opens its children", () => {
         expect(getChevronForItem("1")).toHaveClass(cls.rowChevronRotated);
         const firstSubRow = queryRowForItem("1.1");

@@ -46,8 +46,23 @@ const Header = ({ uiOptions, searchNode, user, onSaveState }: Props) => {
       </button>
 
       <button onClick={onSaveState}>save</button>
-      <span>{user?.username}</span>
-      <button onClick={() => logout()}>logout</button>
+
+      <button
+        style={{ marginLeft: "auto" }}
+        onClick={() => {
+          actions.assignUiOptions({
+            galleryMode: uiOptions.galleryMode == "list" ? "gallery" : "list",
+          });
+        }}
+      >
+        {uiOptions.galleryMode == "list"
+          ? "Switch to Gallery"
+          : "Switch to List"}
+      </button>
+      <div style={{ position: "absolute", right: 0 }}>
+        <span>{user?.username}</span>
+        <button onClick={() => logout()}>logout</button>
+      </div>
     </div>
   );
 };

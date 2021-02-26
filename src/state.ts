@@ -36,6 +36,7 @@ export const initialState: RootState = {
     selectedNode: "HOME",
     leftSidebarWidth: 300,
     isLeftSidebarVisible: true,
+    galleryMode: "list",
   },
   uiState: {
     isMouseDownOnAdjuster: false,
@@ -49,6 +50,7 @@ export type UIOptions = {
   itemIdBeingPlayed?: string;
   leftSidebarWidth: number;
   isLeftSidebarVisible: boolean;
+  galleryMode: "list" | "gallery";
 };
 
 export type UIState = {

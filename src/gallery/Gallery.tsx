@@ -9,7 +9,7 @@ import * as c from "./constants";
 
 const actions = items.actions;
 
-type GalleryProps = {
+export type GalleryProps = {
   allItems: Items;
   nodeSelected: string;
   itemBeingPlayed: string | undefined;

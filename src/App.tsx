@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, FunctionComponent } from "react";
 import ContextMenuView from "./commonComponents/ContextMenu";
-import Gallery from "./gallery/Gallery";
+import Gallery, { GalleryProps } from "./gallery/Gallery";
 import Header from "./Header";
 import { css, colors, cls, utils } from "./infra";
 import * as items from "./state";
@@ -14,6 +14,7 @@ import {
 import LoginPage from "./login/LoginPage";
 import Player from "./player/Player";
 import DragAvatar from "./dragAndDrop/DragAvatar";
+import ListGallery from "./listGallery/ListGallery";
 
 type FirebaseUser = {
   uid: string;
@@ -49,7 +50,8 @@ function App() {
   const galleryRef = React.createRef<Gallery>();
 
   const onSidebarResize = () => {
-    if (galleryRef.current) galleryRef.current.updateColumnsCount();
+    if (galleryRef.current && galleryRef.current.updateColumnsCount)
+      galleryRef.current.updateColumnsCount();
   };
   useEffect(() => {
     const sidebarTransitionChange = 200;
@@ -78,6 +80,9 @@ function App() {
   if (!state.uiState.user) {
     return <LoginPage />;
   }
+
+  const GalleryComponent =
+    state.uiOptions.galleryMode == "gallery" ? Gallery : ListGallery;
   return (
     <>
       <div
@@ -103,7 +108,7 @@ function App() {
             onSaveState={onSaveState}
           />
         </div>
-        <Gallery
+        <GalleryComponent
           ref={galleryRef}
           allItems={state.items}
           nodeSelected={state.uiOptions.selectedNode}

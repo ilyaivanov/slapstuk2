@@ -8,7 +8,6 @@ import LoadingNineDots from "../commonComponents/LoadingNineDots";
 import LoadingStripe from "../commonComponents/LoadingStripe";
 import Subitem from "./Subitem";
 import DragAvatar from "../dragAndDrop/DragAvatar";
-const PLAYER_HEIGHT = 40;
 
 type Props = {
   item: Item;
@@ -134,9 +133,9 @@ css.class(cls.card, {
   cursor: "pointer",
   overflowY: "hidden",
   position: "relative",
-  maxHeight: `calc(100vh - ${c.GALLERY_GAP * 2}px - ${
-    c.HEADER_HEIGHT
-  }px - ${PLAYER_HEIGHT}px`,
+  maxHeight: `calc(100vh - ${c.GALLERY_GAP * 2}px - ${c.HEADER_HEIGHT}px - ${
+    c.PLAYER_HEIGHT
+  }px`,
   display: "flex",
   flexDirection: "column",
 });
